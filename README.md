@@ -40,3 +40,7 @@ packege required
  --> for mongodb so mongoos packege
  --> for password hashing so bcryptjs
  --> for api fetching, serverside rendering so axios
+
+
+
+w8Kr2irKqguAxNwH mongodb password
