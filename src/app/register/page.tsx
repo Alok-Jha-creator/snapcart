@@ -1,12 +1,12 @@
 import Welcome from '@/components/Welcome'
 import React from 'react'
 
-function Home() {
+function Register() {
   return (
     <div>
-      <Welcome />
+       
     </div>
   )
 }
 
-export default Home
+export default Register

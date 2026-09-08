@@ -12,7 +12,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
     >
-      <body>{children}</body>
+      <body className="w-full min-h-screen  bg-linear-to-b from-green-100 to-white">{children}</body>
     </html>
   );
 }
