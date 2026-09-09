@@ -10,7 +10,7 @@ const Welcome = () => {
         animate={{ opacity: 1}}
         transition={{ duration: 2}}
       >
-        hello
+        hello 2:58 
     </motion.div>
     </div>
   )
