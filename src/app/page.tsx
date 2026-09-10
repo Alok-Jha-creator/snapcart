@@ -1,12 +1,14 @@
+'use client'
 import Welcome from '@/components/Welcome'
-import React from 'react'
+import { useState } from 'react'
 
-function Home() {
+
+export default function Page() {
+  const [step, setStep] = useState(1)
+
   return (
-    <div>
-      <Welcome />
-    </div>
+    <>
+      {step === 1 && <Welcome nextStep={setStep} />}
+    </>
   )
 }
-
-export default Home
