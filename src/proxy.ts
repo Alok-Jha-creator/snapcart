@@ -1,3 +1,4 @@
+import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 
@@ -7,6 +8,7 @@ export async function proxy (req:NextRequest){
     if(publicRoutes.some((path)=>pathname.startsWith(path))){
         return NextResponse.next()
     }
-      //publicRoutes.some((path)=>path==pathname )
+    const token = await getToken({req,secret:process.env.AUTH_SECRET})
+    console.log(token)
     return NextResponse.next()
 }
