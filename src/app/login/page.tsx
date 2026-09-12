@@ -16,15 +16,14 @@ const Login = () => {
    const [loding,setLoading] = useState(false)
    const router = useRouter()
    const session = useSession()
-   console.log(session)
    const handleLogin = async (e:FormEvent)=>{
     e.preventDefault()
     setLoading(true)
     try {
         await signIn("credentials",{
             email,password,
-            redirect: false,
         })
+        router.push('/')
         setLoading(false)
     } catch (error) {
        console.log(error) 
@@ -91,7 +90,7 @@ const Login = () => {
       OR
       <span className='flex-1 h-px bg-gray-200'></span>
     </div>
-    <button className='w-full flex font-semibold py-3 rounded-xl transition-all duration-200 shadow-md items-center justify-center gap-3 bg-white text-gray-700 border border-gray-400 hover:bg-gray-100' onClick={()=>signIn("google")}>
+    <button className='w-full flex font-semibold py-3 rounded-xl transition-all duration-200 shadow-md items-center justify-center gap-3 bg-white text-gray-700 border border-gray-400 hover:bg-gray-100' onClick={()=>signIn("google",{callbackUrl:"/"})}>
      <FcGoogle className="w-6 h-6" />
       Continue with Google
     </button>

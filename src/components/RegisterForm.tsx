@@ -24,7 +24,7 @@ const RegisterForm = ({previousStep}:propType) => {
       const result = await axios.post("/api/auth/register",{
         name,email,password
       }) 
-      console.log(result.data)
+      router.push("/login")
       setLoading(false)
     } catch (error) {
       console.log(error)
@@ -101,7 +101,7 @@ const RegisterForm = ({previousStep}:propType) => {
       <span className='flex-1 h-px bg-gray-200'></span>
     </div>
     <button type='button' className='w-full flex font-semibold py-3 rounded-xl transition-all duration-200 shadow-md items-center justify-center gap-3 bg-white text-gray-700 border border-gray-400 hover:bg-gray-100' 
-    onClick={()=>signIn("google")}
+    onClick={()=>signIn("google",{callbackUrl:"/"})}
     >
      <FcGoogle className="w-6 h-6" />
       Continue with Google
