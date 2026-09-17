@@ -51,7 +51,7 @@ const RegisterForm = ({previousStep}:propType) => {
       animate={{ opacity: 1, y: -5 }}
       transition={{ duration: 0.6 }} 
       className='text-gray-600 mb-8 flex items-center'>
-        Join Snapcart today <Leaf className='w-5 h-5 text-green-600'/>
+        Join Snapcart Today <Leaf className='w-5 h-5 text-green-600'/>
     </motion.p>
 
     <motion.form
