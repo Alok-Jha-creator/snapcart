@@ -83,7 +83,7 @@ const EditRoleMobile = () => {
        className={`inline-flex items-center mt-20 gap-2  font-semibold py-3 px-8 rounded-2xl shadow-md transition-all duration-200 w-47 ${
         selectedRole && mobile.length === 10 ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-400 text-gray-500 cursor-not-allowed'
        }`}
-      onClick={handleEdit}
+       onClick={handleEdit}
        >Go to Home <ArrowRight/> </motion.button>
     </div>
   )
