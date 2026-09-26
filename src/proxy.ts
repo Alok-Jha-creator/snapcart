@@ -1,4 +1,5 @@
 import { log } from "console"
+import { ToyBrick } from "lucide-react"
 import { getToken } from "next-auth/jwt"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -15,6 +16,10 @@ export default async function proxy(req: NextRequest) {
     const loginUrl=new URL("/login", req.url)
     loginUrl.searchParams.set("callbackUrl", req.url)
     return NextResponse.redirect(loginUrl)
+  }
+  const role =token.role
+  if(pathname.startsWith("/user") && role!=="user"){
+    return NextResponse.redirect()
   }
   return NextResponse.next()
 }

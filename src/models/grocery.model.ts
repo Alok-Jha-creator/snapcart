@@ -41,12 +41,10 @@ const grocerySchema = new mongoose.Schema<IGrocery>({
         type: String,
         required: true,
     },
-
-
 }, {
     timestamps: true
 })
 
 
 const Grocery=mongoose.models.Grocery || mongoose.model("Grocery",grocerySchema)
-export default Grocery
+export default Grocery 
