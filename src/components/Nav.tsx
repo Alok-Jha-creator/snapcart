@@ -1,5 +1,5 @@
 'use client'
-import { LogOut, Package, Search, ShoppingCartIcon, User } from 'lucide-react';
+import { Cross, LogOut, Package, Search, SearchIcon, ShoppingCartIcon, User, X } from 'lucide-react';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import React,{useEffect, useRef, useState} from 'react'
@@ -21,6 +21,7 @@ interface IUser{
 const Nav = ({user}:{user:IUser}) => {
   const [open, setOpen] = React.useState(false)
   const profileDropDown=useRef<HTMLDivElement>(null)
+  const [searchBarOpen,setSearchBarOpen]=useState(false)
   useEffect(()=>{
     const handleClickOutside=(e:MouseEvent)=>{
       if(profileDropDown.current && !profileDropDown.current.contains(e.target as Node)){
@@ -42,6 +43,12 @@ const Nav = ({user}:{user:IUser}) => {
       </form>
 
       <div className='flex items-center gap-3 md:gap-6 relative'>
+            <div className='bg-white rounded-full w-11  h-11 flex items-center justify-center shadow-md hover:scale-105 transition md:hidden'
+             onClick={()=>setSearchBarOpen((prev)=>!prev)}
+            >
+                <Search className='text-green-600 w-6 h-6'/>
+            </div>
+
           <Link href={""} className='flex items-center w-11 h-11 justify-center shadow-md relative gap-1 bg-white hover-scale-105 transition rounded-full'>
            <ShoppingCartIcon className='w-6 h-6 text-green-600 '/>
            <span className='absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semi shadowbold'>0</span>
@@ -58,7 +65,7 @@ const Nav = ({user}:{user:IUser}) => {
             animate={{ opacity: 1, y: 0,scale:1 }}
             transition={{ duration: 0.3 }}
             exit={{ opacity: 0, y: -10,scale:0.95 }}
-            className='absolute right-0 mt-3  bg-white shadow-lg rounded-2xl border border-gray-200 p-3 z-999'
+            className='absolute right-0 mt-3 w-60  bg-white shadow-lg rounded-2xl border border-gray-200 p-3 z-999'
             >
               <div className='flex items-center gap-2 px-3 py-2 border-b border-gray-100'>
                 <div className='w-10 h-10 rounded-full relative bg-green-400 flex items-center justify-center overflow-hidden'>
@@ -69,8 +76,8 @@ const Nav = ({user}:{user:IUser}) => {
                   <div className='text-gray-500 text-xs capitalize '>{user.role}</div>
                 </div>
               </div>
-              <Link href={''} onClick={()=>setOpen(false)} className='flex items-center gap-2 px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium'>
-               <Package className='w-5 h-5 text-gray-600 mr-2'/>
+              <Link href={''} onClick={()=>setOpen(false)} className='flex items-center gap-2 px-3 py-3 text-gray-700 hover:bg-green-100 rounded-lg transition-colors font-medium'>
+               <Package className='w-5 h-5 text-green-600 '/>
                My Orders
               </Link>
                   <button className='flex items-center gap-2 w-full text-left px-3 py-3 hover:bg-red-50 rounded-lg text-gray-700 font-medium'
@@ -83,10 +90,28 @@ const Nav = ({user}:{user:IUser}) => {
                   </button>
             </motion.div>}
           </AnimatePresence>
+          <AnimatePresence>
+            {searchBarOpen && 
+            <motion.div 
+            initial={{ opacity: 0, y: -10,scale:0.95 }}
+            animate={{ opacity: 1, y: 0,scale:1 }}
+            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10,scale:0.95 }}
+            className='fixed top-24 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-full shadow-lg z-40 flex items-center px-4 py-2'
+            >
+              <Search className='text-gray-500 w-5 h-5 mr-2'/>
+              <form className='grow'>
+                <input type="text" placeholder='search groceries..' className='w-full outline-none text-gray-500' />
+              </form>
+              <button onClick={()=>setSearchBarOpen(false)}>
+                <X className='text-gray-400 w-5 h-5'/>
+              </button>
+            </motion.div>}
+          </AnimatePresence>
           </div>
       </div>
     </div>
   )
 }
-    
+ 
 export default Nav
