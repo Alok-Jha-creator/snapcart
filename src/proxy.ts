@@ -19,8 +19,16 @@ export default async function proxy(req: NextRequest) {
   }
   const role =token.role
   if(pathname.startsWith("/user") && role!=="user"){
-    return NextResponse.redirect()
+    return NextResponse.redirect(new URL("/unathorized",req.url))
   }
+  if(pathname.startsWith("/delivery") && role!=="deliveryBoy"){
+    return NextResponse.redirect(new URL("/unathorized",req.url))
+  }
+  if(pathname.startsWith("/admin") && role!=="admin"){
+    return NextResponse.redirect(new URL("/unathorized",req.url))
+  }
+
+
   return NextResponse.next()
 }
 export const config = {

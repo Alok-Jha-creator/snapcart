@@ -69,7 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     // tocken bhitra user ko data rakhxa callbacks le
-    jwt({token,user}) {
+    jwt({token,user,trigger,session}) {
         if(user) {
             token.id = user.id,
             token.name = user.name,
@@ -77,6 +77,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             token.role = user.role
 
         }
+        if(trigger=="update"){
+          token.role=session.role
+        }
+
         return token;
     },
     session({session,token}) {
