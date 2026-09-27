@@ -64,7 +64,7 @@ const Nav = ({user}:{user:IUser}) => {
           </div>
 
           <div className='flex flex-col gap-3 font-medium mt-6'>
-            <Link href={""} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><PlusCircle className='w-6 h-6'/>Add Grocery</Link>
+            <Link href={"/admin/add-grocery"} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><PlusCircle className='w-6 h-6'/>Add Grocery</Link>
             <Link href={""} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><Boxes className='w-6 h-6'/>View Grocery</Link>
             <Link href={""} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><Clipboard className='w-6 h-6'/>Manage Orders</Link>
           </div>
@@ -107,7 +107,7 @@ const Nav = ({user}:{user:IUser}) => {
 
           {user.role=="admin" && <>
           <div className='hidden md:flex items-center gap-4'>
-            <Link href={""} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><PlusCircle className='w-6 h-6'/>Add Grocery</Link>
+            <Link href={"/admin/add-grocery"} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><PlusCircle className='w-6 h-6'/>Add Grocery</Link>
             <Link href={""} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><Boxes className='w-6 h-6'/>View Grocery</Link>
             <Link href={""} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><Clipboard className='w-6 h-6'/>Manage Orders</Link>
           </div>
