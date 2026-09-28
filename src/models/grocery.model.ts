@@ -36,6 +36,9 @@ const grocerySchema = new mongoose.Schema<IGrocery>({
     unit: {
         type: String,
         required: true,
+        enum:[
+            "kg","g","liter","ml","piece","pack"
+        ]
     },
     image: {
         type: String,
