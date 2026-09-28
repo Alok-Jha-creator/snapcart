@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import uploadOnCloudinary from "@/lib/cloudinary";
 import connectDb from "@/lib/db";
 import Grocery from "@/models/grocery.model";
-import { connect } from "http2";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req:NextRequest){
@@ -30,7 +29,7 @@ export async function POST(req:NextRequest){
     })
     return NextResponse.json(
         grocery,
-        {status:400}
+        {status:201}
     )
     } catch (error) {
         {message:`add grocery error ${error}`}

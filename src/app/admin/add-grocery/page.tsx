@@ -1,9 +1,10 @@
 'use client'
 import { ArrowBigLeft, ArrowLeft, Plus, PlusCircle, Upload } from 'lucide-react'
 import Link from 'next/link'
-import React, { ChangeEvent, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useState } from 'react'
 import { motion } from 'motion/react'
 import Image from 'next/image'
+import axios from 'axios'
 
 const categories = [
   "Fruits & Vegetables",
@@ -34,6 +35,24 @@ const AddGrocery = () => {
     setBackendImage(file)
     setPreview(URL.createObjectURL(file))
   }
+  const handleSubmit=async (e:FormEvent)=>{
+    e.preventDefault()
+    try {
+      const formData=new FormData()
+      formData.append("name",name)
+      formData.append("category",category)
+      formData.append("price",price)
+      formData.append("unit",unit)
+      if(backendImage){
+        formData.append("image",backendImage)
+      }
+      
+      const result= await axios.post("/api/admin/add-grocery",formData)
+      console.log(result.data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-linear-to-br from-green-50 to-white py-16 px-4 relative'>
@@ -54,24 +73,24 @@ const AddGrocery = () => {
           </div>
           <p className='text-gray-500 text-sm mt-2 text-center'>Fill out details below to add a new grocery item.</p>
         </div>
-        <form className='flex flex-col gap-3 w-full animate-fadeIn'>
+        <form className='flex flex-col gap-1 w-full animate-fadeIn' onSubmit={handleSubmit}>
           <div>
             <label htmlFor="name" className='block text-gray-700 font-medium mb-0.5'>Grocery Name <span className='text-red-600'>*</span></label>
-            <input type="text" id='name' placeholder='eg:sweets,milk,...' onChange={(e) => { setName(e.target.value) }} value={name} className='w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-green-400 transition-all' />
+            <input type="text" id='name' placeholder='eg:sweets,milk,...' onChange={(e) => { setName(e.target.value) }} value={name} className='w-full border border-gray-300 rounded-xl px-3 py-3 outline-none focus:ring-green-400 transition-all' />
           </div>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
             <div>
               <label className='block text-gray-700 font-medium mb-1'>
                 Category
                 <span className='text-red-500'>*</span>
               </label>
               <select name="category"
-                className='w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-400 transition-all bg-white'
+                className='w-full border border-gray-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-green-400 transition-all bg-white'
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}>
-                <option value="category">Select Category</option>
+                <option value="">Select Category</option>
                 {categories.map(cat => (
-                  <option value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select></div>
 
@@ -80,7 +99,7 @@ const AddGrocery = () => {
                 Unit
                 <span className='text-red-500'>*</span>
               </label>
-              <select name="unit" className='w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-400 transition-all bg-white'
+              <select name="unit" className='w-full border border-gray-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-green-400 transition-all bg-white'
                 onChange={(e) => setUnit(e.target.value)}
                 value={unit}
               >
@@ -88,7 +107,7 @@ const AddGrocery = () => {
                   Select Unit
                 </option>
                 {units.map(cat => (
-                  <option value={cat}>{cat}</option>
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
             </div>
@@ -98,21 +117,28 @@ const AddGrocery = () => {
               Grocery Price
               <span className='text-red-600'>*</span>
             </label>
-            <input type="text" id='price' placeholder='eg:500,1000,...' className='w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-green-400 transition-all'
+            <input type="text" id='price' placeholder='eg:500,1000,...' className='w-full border border-gray-300 rounded-xl px-3 py-3 outline-none focus:ring-green-400 transition-all'
               onChange={(e) => setPrice(e.target.value)}
               value={price}
-            /> 
+            />
           </div>
 
-          <div className='flex flex-col sm:flex-row items-center gap-5'>
-            <label htmlFor="image" className='cursor-pointer flex items-center justify-center gap-2 bg-green-50 text-green-700 font-semibold border border-green-200 rounded-xl px-6 py-3 hover:bg-green-100 transition-all w-full sm:w-auto'>
-              <Upload className='w-5 h-5'/> Upload image
+          <div className='flex flex-col sm:flex-row items-center gap-4'>
+            <label htmlFor="image" className='cursor-pointer flex items-center justify-center gap-1 bg-green-50 text-green-700 font-semibold border border-green-200 rounded-xl px-6 py-3 hover:bg-green-100 transition-all w-full sm:w-auto'>
+              <Upload className='w-5 h-5' /> Upload image
             </label>
             <input type="file" accept='image/*' id='image' hidden
               onChange={handleImageChange}
             />
             {preview && <Image src={preview} width={100} height={100} alt=' image' className='rounded-xl shadow-md border-gray-300 object-cover' />}
           </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.2 }}
+            className='mt-3 w-full bg-linear-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl disabled:opacity-60 transition-all flex items-center justify-center gap-2'
+          >
+            Add Grocery
+          </motion.button>
         </form>
       </motion.div>
     </div>
