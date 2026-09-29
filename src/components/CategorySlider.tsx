@@ -63,7 +63,7 @@ const CategorySlider = () => {
                     const Icon = cat.icon
                     return <motion.div
                         key={cat.id}
-                        className={`min-w-[150px] md:min-w-[180px] flex flex-col items-center justify-center rounded-2xl 
+                        className={`min-w-37.5 md:min-w-45 flex flex-col items-center justify-center rounded-2xl 
                     ${cat.color} shadow-md hover:shadow-xl transition-all cursor-pointer`}
                     >
                         <div className='flex flex-col items-center justify-center p-5'>
