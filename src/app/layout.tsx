@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Provider from "@/Provider";
+import StoreProvider from "@/redux/StoreProvider";
 
 export const metadata: Metadata = {
   title: "SnapCart | 10 min grocery delivery app",
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="w-full min-h-screen  bg-linear-to-b from-green-100 to-white">
         <Provider>
-           {children}
+          <StoreProvider>
+              {children}
+          </StoreProvider>
+           
         </Provider>
         
       </body>
