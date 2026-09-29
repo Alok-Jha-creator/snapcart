@@ -103,7 +103,7 @@ const Nav = ({ user }: { user: IUser }) => {
             <Search className='text-green-600 w-6 h-6' />
           </div>
 
-          <Link href={""} className='flex items-center w-11 h-11 justify-center shadow-md relative gap-1 bg-white hover-scale-105 transition rounded-full'>
+          <Link href={"/user/cart"} className='flex items-center w-11 h-11 justify-center shadow-md relative gap-1 bg-white hover-scale-105 transition rounded-full'>
             <ShoppingCartIcon className='w-6 h-6 text-green-600 ' />
             <span className='absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semi shadowbold'>{cartData.length}</span>
           </Link>
