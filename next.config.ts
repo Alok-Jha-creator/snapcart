@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   images:{
     remotePatterns:[
       {hostname: "lh3.googleusercontent.com" },
-      {hostname:"images.unsplash.com"}
+      {hostname:"images.unsplash.com"},
+      {hostname:"res.cloudinary.com"}
 
     ]
   }
