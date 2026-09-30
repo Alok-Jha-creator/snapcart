@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import mongoose from 'mongoose'
 import { motion } from "motion/react"
 import Image from 'next/image'
