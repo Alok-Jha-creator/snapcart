@@ -1,12 +1,13 @@
 'use client'
 
-import { ArrowLeft, ShoppingBasket } from 'lucide-react'
+import { ArrowLeft, Minus, Plus, ShoppingBasket } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import {AnimatePresence, motion} from 'motion/react'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
 import { div } from 'motion/react-client'
+import Image from 'next/image'
 
 const CartPage = () => {
     const {cartData}=useSelector((state:RootState)=>state.cart)
@@ -39,7 +40,34 @@ const CartPage = () => {
         <div className='grid grid-cols-1 lg-grid-cols-3 gap-8'>
             <div>
                 <AnimatePresence>
-                    3:00:08
+                    {cartData.map((item,index)=>(
+                      <motion.div
+                      key={index}
+                      initial={{opacity:0,y:30}}
+                      animate={{opacity:1,y:0}}
+                      exit={{opacity:0,y:-20}}
+                      className='flex flex-col sm:flex-row items-center bg-white rounded-2xl shadow-md p-5 hover:shadow-xl transition-all duration-300 border border-gray-100'
+                      >
+                        <div className='relative w-28 h-28 sm:w-24 sm:h-24 md:w-28 md:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50'>
+                          <Image 
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          className=' object-contain p-3 transition-transform duration-300 hover:scale-105'
+                          />
+                        </div>
+                        <div className='mt-4 sm:mt-0 sm:ml-4 flex-1 text-center sm:text-left'>
+                          <h3 className='text-base sm:text-lg font-semibold text-gray-800 line-clamp-1'>{item.name}</h3>
+                          <p className='text-xs sm:text-sm text-gray-500'>{item.unit}</p>
+                          <p className='text-green-700 font-bold mt-1 text-sm sm:text-base'>Rs {Number(item.price)*item.quantity}</p>
+                        </div>
+                        <div className='flex items-center justify-center sm:justify-end gap-3 mt-3 sm:mt-0 bg-gray-50 px-3 py-2 rounded-full'>
+                            <button className='bg-white p-1.5 rounded-full hover:bg-green-100 transition-all border border-gray-200'><Minus size={14} className='text-green-700'/></button>
+                            <span className='font-semibold text-gray-800 w-6 text-center'>{item.quantity}</span>
+                            <button className='bg-white p-1.5 rounded-full hover:bg-green-100 transition-all border border-gray-200'><Plus size={14} className='text-green-700'/></button>
+                        </div>
+                      </motion.div> 
+                    ))}
                 </AnimatePresence>
             </div>
         </div>
