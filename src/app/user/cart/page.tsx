@@ -11,7 +11,7 @@ import Image from 'next/image'
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '@/redux/cartSlice'
 
 const CartPage = () => {
-    const {cartData}=useSelector((state:RootState)=>state.cart)
+    const {cartData,subTotal,finalTotal,deliveryFee}=useSelector((state:RootState)=>state.cart)
     const dispach=useDispatch<AppDispatch>()
 
   return (
@@ -80,6 +80,24 @@ const CartPage = () => {
             className='bg-white rounded-2xl shadow-xl p-6 h-fit sticky top-24 border border-gray-100 flex flex-col'
             >
               <h2 className='text-lg sm:text-xl font-bold text-gray-800 mb-4'>Order Summary</h2>
+              <div className='space-y-3 text-gray-700 text-sm sm:text-base'>
+                <div className='flex justify-between'>
+                  <span className='font-semibold'>Subtotal</span>
+                  <span className='text-green-700 font-semibold'>Rs {subTotal}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span className='font-semibold'>Delivery fee</span>
+                  <span className='text-green-700 font-semibold'>Rs {deliveryFee}</span>
+                </div>
+                <hr className='my-3' />
+                <div className='flex justify-between font-bold text-lg sm:text-xl'>
+                  <span >Final total</span>
+                  <span className='text-green-700 font-semibold'>Rs {finalTotal}</span>
+                </div>
+              </div>
+              <motion.button>
+                3.40.27
+              </motion.button>
             </motion.div>
         </div>
       )}
