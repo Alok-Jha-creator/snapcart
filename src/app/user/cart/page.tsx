@@ -9,10 +9,12 @@ import { AppDispatch, RootState } from '@/redux/store'
 import { div } from 'motion/react-client'
 import Image from 'next/image'
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '@/redux/cartSlice'
+import { useRouter } from 'next/navigation'
 
 const CartPage = () => {
     const {cartData,subTotal,finalTotal,deliveryFee}=useSelector((state:RootState)=>state.cart)
     const dispach=useDispatch<AppDispatch>()
+    const router=useRouter()
 
   return (
     <div className='w-[95%] sm:w-[90%] md:w-[80%] mx-auto mt-8 mb-24 relative'>
@@ -51,7 +53,7 @@ const CartPage = () => {
                       exit={{opacity:0,y:-20}}
                       className='flex flex-col sm:flex-row items-center bg-white rounded-2xl shadow-md p-5 hover:shadow-xl transition-all duration-300 border border-gray-100'
                       >
-                        <div className='relative w-28 h-28 sm:w-24 sm:h-24 md:w-28 md:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50'>
+                        <div className='relative w-28 h-28 sm:w-24 sm:h-24 md:w-28 md:h-28 shrink-0 rounded-xl overflow-hidden bg-gray-50'>
                           <Image 
                           src={item.image}
                           alt={item.name}
@@ -95,8 +97,12 @@ const CartPage = () => {
                   <span className='text-green-700 font-semibold'>Rs {finalTotal}</span>
                 </div>
               </div>
-              <motion.button>
-                3.40.27
+              <motion.button
+              whileTap={{scale:0.95}}
+              className='w-full mt-6 bg-green-800 text-white py-3 rounded-full hover:bg-green-500 transition-all text-sm sm:text-base font-semibold'
+              onClick={()=>router.push("/user/checkout")}
+              >
+                Proceed to Checkout
               </motion.button>
             </motion.div>
         </div>
