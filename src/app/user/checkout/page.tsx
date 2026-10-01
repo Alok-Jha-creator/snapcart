@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L, { LatLngExpression } from 'leaflet'
-import { tr } from 'motion/react-client'
 import axios from 'axios'
 
 
@@ -59,12 +58,17 @@ const Checkout = () => {
       const fetchAddress = async () => {
         if(!position) return
         try {
-          const result= await axios.get(`https://nominatim.openstreetmap.org/reverse?lat=${position[0]}&lon=${position[1]}& format=json`)
+          const result= await axios.get(`https://nominatim.openstreetmap.org/reverse?lat=${position[0]}&lon=${position[1]}&format=json`)
           setAddress((prev) => ({ ...prev,
-            city:result.data.address.city,
-            state:result.data.address.state,
-            pincode:result.data.address.postcode,
-            fullAddress:result.data.display_name
+            city: result.data.address.city 
+            || result.data.address.town 
+            || result.data.address.municipality 
+            || result.data.address.city_district 
+            || result.data.address.village 
+            || "",
+            state:result.data.address.state || "",
+            pincode:result.data.address.postcode || "",
+            fullAddress:result.data.display_name || ""
           }))
         } catch (error) {
           console.log('Error fetching address:', error)
