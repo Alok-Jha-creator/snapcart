@@ -10,6 +10,8 @@ import 'leaflet/dist/leaflet.css'
 import L, { LatLngExpression } from 'leaflet'
 import axios from 'axios'
 import { OpenStreetMapProvider } from 'leaflet-geosearch'
+import { p } from 'motion/react-client'
+
 
 
 const markerIcon = new L.Icon({
@@ -20,7 +22,7 @@ const markerIcon = new L.Icon({
 const Checkout = () => {
   const router = useRouter()
   const { userData } = useSelector((state: RootState) => state.user)
-  const { subTotal,deliveryFee,finalTotal } = useSelector((state: RootState) => state.cart)
+  const { subTotal,deliveryFee,finalTotal,cartData } = useSelector((state: RootState) => state.cart)
   const [address, setAddress] = useState({
     fullName: "",
     mobile: "",
@@ -109,6 +111,41 @@ const Checkout = () => {
       }
     } catch (error) {
       console.log('Search error:', error)
+    }
+  }
+  const handleCod = async () =>{
+    if(!position){
+      return null
+    }
+    try {
+      const result = await axios.post("/api/user/order",{
+        userId:userData?._id,
+        items:cartData.map(item=>(
+          {
+            grocery:item._id,
+            name:item.name,
+            price:item.price,
+            unit:item.unit,
+            quantity:item.quantity,
+            image:item.image
+          }
+        )),
+        totalAmount:finalTotal,
+        address:{
+          fullName:address.fullName,
+          mobile:address.mobile,
+          city:address.city,
+          state:address.state,
+          pincode:address.pincode,
+          fullAddress:address.fullAddress,
+          latitude:position[0],
+          longitude:position[1]
+        },
+        paymentMethod
+      })
+      console.log('order placed', result.data)
+    } catch (error) {
+      console.log('place order error', error)
     }
   }
 
@@ -256,6 +293,13 @@ const Checkout = () => {
           <motion.button 
           whileTap={{ scale: 0.97 }}
           className='w-full bg-green-600 text-white py-3 rounded-full mt-6 hover:bg-green-700 transition-all font-semibold'
+          onClick={()=>{
+            if(paymentMethod=="cod"){
+              handleCod()
+            }else{
+              null
+            }
+          }}
           >
             {paymentMethod =="cod"?"Place Order":"Pay & Place Order"}
           </motion.button>
