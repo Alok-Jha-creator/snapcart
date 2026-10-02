@@ -253,6 +253,12 @@ const Checkout = () => {
             </div>
           
           </div>
+          <motion.button 
+          whileTap={{ scale: 0.97 }}
+          className='w-full bg-green-600 text-white py-3 rounded-full mt-6 hover:bg-green-700 transition-all font-semibold'
+          >
+            {paymentMethod =="cod"?"Place Order":"Pay & Place Order"}
+          </motion.button>
         </motion.div>
       </div>
     </div>
