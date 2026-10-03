@@ -143,7 +143,7 @@ const Checkout = () => {
         },
         paymentMethod
       })
-      console.log('order placed', result.data)
+      router.push("/user/order-success")
     } catch (error) {
       console.log('place order error', error)
     }
