@@ -33,6 +33,17 @@ export async function POST(req: NextRequest) {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
+            line_items: items.map((item: any) => ({
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: item.name,
+                        images: [item.image],
+                    },
+                    unit_amount: parseInt(item.price) * 100, // Convert to cents
+                },
+                quantity: item.quantity,
+            })),
         })
     } catch (error) {
         
