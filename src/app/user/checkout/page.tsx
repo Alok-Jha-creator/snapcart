@@ -149,6 +149,55 @@ const Checkout = () => {
     }
   }
 
+  const handleEsewaPayment = async () => {
+    if (!position) return
+    try {
+      const result = await axios.post("/api/user/payment", {
+        userId: userData?._id,
+        items: cartData.map(item => ({
+          grocery: item._id,
+          name: item.name,
+          price: item.price,
+          unit: item.unit,
+          quantity: item.quantity,
+          image: item.image
+        })),
+        totalAmount: finalTotal,
+        address: {
+          fullName: address.fullName,
+          mobile: address.mobile,
+          city: address.city,
+          state: address.state,
+          pincode: address.pincode,
+          fullAddress: address.fullAddress,
+          latitude: position[0],
+          longitude: position[1]
+        },
+        paymentMethod
+      })
+  
+      const { esewaPayload, esewaUrl } = result.data
+  
+      // Dynamically create a form and submit it to eSewa's payment page
+      const form = document.createElement("form")
+      form.method = "POST"
+      form.action = esewaUrl
+  
+      Object.entries(esewaPayload).forEach(([key, value]) => {
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = key
+        input.value = String(value)
+        form.appendChild(input)
+      })
+  
+      document.body.appendChild(form)
+      form.submit()
+    } catch (error) {
+      console.log('esewa payment error', error)
+    }
+  }
+
   const handleCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
@@ -265,7 +314,7 @@ const Checkout = () => {
                 className={`flex items-center gap-3 w-full border rounded-lg p-3 transition-all ${
                   paymentMethod === "online" ? "border-green-600 bg-green-100 shadow-sm" : "border-gray-200 hover:border-gray-400"
                 }`}>
-                <CreditCardIcon className='text-green-600'/> <span className='font-medium text-gray-700'>Pay Online (stripe)</span>
+                <CreditCardIcon className='text-green-600'/> <span className='font-medium text-gray-700'>Pay Online (Esewa)</span>
                 </button>
                 <button
                 onClick={() => setPaymentMethod("cod")}
@@ -297,7 +346,7 @@ const Checkout = () => {
             if(paymentMethod=="cod"){
               handleCod()
             }else{
-              null
+              handleEsewaPayment()
             }
           }}
           >
