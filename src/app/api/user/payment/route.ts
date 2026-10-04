@@ -33,8 +33,12 @@ export async function POST(req: NextRequest) {
         const productCode = process.env.ESEWA_PRODUCT_CODE!
         const secretKey = process.env.ESEWA_SECRET_KEY!
 
+        // Use the SAME formatted string for both the signature message and the payload field,
+        // otherwise eSewa rejects it with "Invalid payload signature" (ES104)
+        const formattedTotal = totalAmount.toFixed(2)
+
         const signedFieldNames = "total_amount,transaction_uuid,product_code"
-        const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${productCode}`
+        const message = `total_amount=${formattedTotal},transaction_uuid=${transactionUuid},product_code=${productCode}`
 
         const signature = crypto
             .createHmac("sha256", secretKey)
@@ -44,13 +48,15 @@ export async function POST(req: NextRequest) {
         const esewaPayload = {
             amount: totalAmount,
             tax_amount: 0,
-            total_amount: totalAmount.toFixed(2),
+            total_amount: formattedTotal,
             transaction_uuid: transactionUuid,
             product_code: productCode,
             product_service_charge: 0,
             product_delivery_charge: 0,
-            success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/payment/verify?orderId=${newOrder._id}`,
-            failure_url: `${process.env.NEXT_PUBLIC_BASE_URL}/user/checkout`,
+            // No query params here — eSewa appends "?data=..." by simple concatenation,
+            // so an existing "?" in this URL would break the query string
+            success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/payment/verify`,
+            failure_url: `${process.env.NEXT_PUBLIC_BASE_URL}/user/checkout?payment=failed`,
             signed_field_names: signedFieldNames,
             signature,
         }
