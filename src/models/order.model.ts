@@ -45,7 +45,7 @@ const orderSchema = new mongoose.Schema<IOrder>({
         }
     ],
     paymentMethod: { type: String, enum: ["cod", "online"], default:"cod"},
-     isPaid: { type: Boolean, default: false },
+    isPaid: { type: Boolean, default: false },
     address: {
         fullName: String,
         mobile: String,

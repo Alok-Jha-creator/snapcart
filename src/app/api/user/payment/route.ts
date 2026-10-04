@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         const esewaPayload = {
             amount: totalAmount,
             tax_amount: 0,
-            total_amount: totalAmount,
+            total_amount: totalAmount.toFixed(2),
             transaction_uuid: transactionUuid,
             product_code: productCode,
             product_service_charge: 0,
