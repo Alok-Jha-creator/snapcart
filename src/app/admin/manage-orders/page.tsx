@@ -1,10 +1,10 @@
 'use client'
 import axios from 'axios'
-import { Order } from '@/models/order.model'
+
 import React, { useEffect, useState } from 'react'
 
 const ManageOrders = () => {
-    const [orders, setOrders] = useState<Order[]>()
+    const [orders, setOrders] = useState<[]>()
     useEffect(() => {
         const getOrders = async () => {
             try {
@@ -18,7 +18,7 @@ const ManageOrders = () => {
     }, [])
   return (
     <div className='min-h-screen bg-gray-50 w-full'>
-      
+      hello manage orders
     </div>
   )
 }
