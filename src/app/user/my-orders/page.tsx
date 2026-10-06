@@ -174,7 +174,7 @@ const MyOrders = () => {
                                         <div className='flex items-center gap-1.5 text-xs font-bold text-gray-900'>
                                             <MapPinned size={14} className='text-gray-400' />
                                             {order.address.city}, {order.address.state}
-                                            <span className='text-yellow-800 mx-2'>•  {order.paymentMethod === "cod" ? "Cash on delivery" : order.isPaid ? "Paid online" : "Payment pending"}</span>
+                                            <span className='text-red-600 mx-2'>•  {order.paymentMethod === "cod" ? "Cash on delivery" : order.isPaid ? "Paid online" : "Payment pending"}</span>
                                            
                                         </div>
                                         <div className='flex gap-2'>

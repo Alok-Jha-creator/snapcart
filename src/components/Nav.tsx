@@ -113,7 +113,7 @@ const Nav = ({ user }: { user: IUser }) => {
           <div className='hidden md:flex items-center gap-4'>
             <Link href={"/admin/add-grocery"} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><PlusCircle className='w-6 h-6' />Add Grocery</Link>
             <Link href={""} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><Boxes className='w-6 h-6' />View Grocery</Link>
-            <Link href={""} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><Clipboard className='w-6 h-6' />Manage Orders</Link>
+            <Link href={"/admin/manage-orders"} className='flex item-center gap-2 bg-white text-green-700 font-semibold px-4 py-2 rounded-full hover:bg-green-100 transition-all'><Clipboard className='w-6 h-6' />Manage Orders</Link>
           </div>
           <div className='md:hidden bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md' onClick={() => setMenuOpen(prev => !prev)}>
             <Menu className='text-green-600 w-6 h-6' />
