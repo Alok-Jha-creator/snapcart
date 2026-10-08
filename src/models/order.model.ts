@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-interface IOrder {
+export interface IOrder {
     _id?:mongoose.Types.ObjectId,
     user: mongoose.Types.ObjectId,
     items: [
@@ -26,6 +26,7 @@ interface IOrder {
         latitude: number,
         longitude: number
     }
+    assignedDeliveryBoy?:mongoose.Types.ObjectId
     status: "pending" | "out of delivery"| "delivered" ,
     createdAt?: Date,
     updatedAt?: Date
