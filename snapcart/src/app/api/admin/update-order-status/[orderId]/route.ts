@@ -19,6 +19,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
         if(status==="out of delivery" && !order.assignement){
             availableDeliveryBoy = await Order.find({ status: "pending" }).populate("user")
         }
+        await order.save()
+        return NextResponse.json(order, { status: 200 })
     } catch (error) {
         return NextResponse.json(
             { message: `update status error ${error}` },

@@ -76,7 +76,7 @@ const ManageOrders = () => {
   const handleStatusChange = async (orderId: string, status: string) => {
     setUpdatingId(orderId)
     try {
-      const result = await axios.patch('/api/admin/update-order-status', { orderId, status })
+      const result = await axios.post(`/api/admin/update-order-status/${orderId}`, { status })
       setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, status: result.data.status } : o)))
     } catch (error) {
       console.log('Failed to update order status', error)
@@ -90,16 +90,16 @@ const ManageOrders = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 w-full py-10'>
+    <div className='min-h-screen bg-gray-50 w-full py-5'>
       <div className='w-[94%] sm:w-[90%] md:w-[70%] mx-auto'>
         <button
           onClick={() => router.push("/")}
-          className='flex items-center gap-2 text-green-700 hover:text-green-800 font-medium text-sm mb-6'
+          className='flex items-center gap-2 border-green-400 border-2 p-1 bg-amber-50 rounded-full text-green-700 hover:text-green-800 font-medium text-sm mb-6'
         >
           <ArrowLeft size={16} />
           Back
         </button>
-        <h1 className='text-xl sm:text-2xl font-bold text-green-700 text-center mb-8'>Manage Orders</h1>
+        <h1 className='text-xl sm:text-2xl font-bold text-green-700 text-center mb-5'>Manage Orders</h1>
 
         {loading ? (
           <p className='text-center text-gray-500 py-16'>Loading orders...</p>
@@ -126,10 +126,11 @@ const ManageOrders = () => {
                       <div className='flex items-center gap-2'>
                         <Package className='text-green-600' size={18} />
                         <span className='font-semibold text-gray-800'>Order #{order._id.slice(-6)}</span>
-                      </div>
-                      <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${order.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                        <span className={`inline-block mt-1.9 text-xs px-5 py-0.5 rounded-full font-medium ${order.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
                         {order.isPaid ? "Paid" : "Unpaid"}
                       </span>
+                      </div>
+                      
                       <p className='text-xs text-gray-400 mt-1.5'>
                         {new Date(order.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -151,7 +152,7 @@ const ManageOrders = () => {
                     </div>
                   </div>
 
-                  {/* Customer + address + payment info */}
+                 
                   <div className='mt-3 space-y-1.5 text-sm text-gray-600'>
                     <div className='flex items-center gap-2'>
                       <User size={14} className='text-green-600' />
