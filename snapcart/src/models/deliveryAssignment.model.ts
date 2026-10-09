@@ -1,23 +1,22 @@
 import mongoose from "mongoose";
-import User from "./user.model";
 
 interface IDeliveryAssignment {
-    order:mongoose.Types.ObjectId;
-    brodcastedTo:mongoose.Types.ObjectId;
-    assignedTo:mongoose.Types.ObjectId | null;
-    status: "brodcasted" | "assigned" | "completed";  
-    acceptedAt: Date ;
-    createdAt: Date;
-    updatedAt: Date;
+    order: mongoose.Types.ObjectId;
+    broadcastedTo: mongoose.Types.ObjectId[];
+    assignedTo: mongoose.Types.ObjectId | null;
+    status: "broadcasted" | "assigned" | "completed";
+    acceptedAt?: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const deliveryAssignmentSchema = new mongoose.Schema<IDeliveryAssignment>({
-    order: { type: mongoose.Schema.Types.ObjectId, ref: "Order"},
-    brodcastedTo: { type: mongoose.Schema.Types.ObjectId,ref:User},
-    assignedTo:{type:mongoose.Schema.Types.ObjectId, ref:User},
-    status:{type:String,enum:["brodcasted" , "assigned" , "completed"],default:"brodcasted"},
-    acceptedAt:{type:Date,}
+    order: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+    broadcastedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    status: { type: String, enum: ["broadcasted", "assigned", "completed"], default: "broadcasted" },
+    acceptedAt: { type: Date }
+}, { timestamps: true })
 
-},{timestamps:true})
-
-const deliveryAssignment=mongoose.models.deliveryAssignment || mongoose.model("DeliveryAssignment",deliveryAssignmentSchema)
+const DeliveryAssignment = mongoose.models.DeliveryAssignment || mongoose.model("DeliveryAssignment", deliveryAssignmentSchema)
+export default DeliveryAssignment
