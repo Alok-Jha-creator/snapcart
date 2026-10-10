@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import mongoose from 'mongoose'
 import { motion } from "motion/react"
 import Image from 'next/image'
@@ -33,19 +34,27 @@ const GroceryItemCard = ({ item }: { item: IGrocery }) => {
             className='bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col'
         >
             <div className='relative w-full aspect-4/3 bg-gray-50 overflow-hidden group'>
-                <Image
+                <Link href={`/user/grocery/${item._id}`}>
+                    <div className='relative w-full aspect-4/3 bg-gray-50 overflow-hidden group'>
+                    <Image
                     src={item.image}
                     fill
                     alt={item.name}
                     sizes='(max-width:768px) 100vw ,25vw'
                     className='object-contain p-4 transition-transform duration-500 group-hover:scale-105'
                 />
+                    </div>
+                </Link>
+                
                 <div className='absolute inset-0 bg-linear-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300' />
             </div>
 
             <div className='p-4 flex flex-col flex-1'>
                 <p className='text-xs text-gray-500 font-medium mb-1'>{item.category}</p>
-                <h3>{item.name}</h3>
+                <Link href={`/user/grocery/${item._id}`}>
+    <h3 className='hover:text-green-700'>{item.name} <h3>{item.name}</h3></h3>
+</Link>
+                
                 <div className='flex items-center justify-between mt-2'>
                     <span className='text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full'>{item.unit}</span>
                     <span className='text-green-700 font-bold text-lg'>Rs {item.price}</span>
