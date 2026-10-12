@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
-import { ArrowRight, Banknote, Boxes, CheckCircle2, Clipboard, Clock, Package, PlusCircle } from 'lucide-react'
+import { ArrowRight, Banknote, Boxes, CheckCircle2, Clipboard, Clock, CreditCard, MapPin, Package, Phone, PlusCircle, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import axios from 'axios'
@@ -11,12 +11,12 @@ import { RootState } from '@/redux/store'
 interface IOrder {
     _id: string
     user?: { name?: string }
-    items: { quantity: number }[]
+    items: { name?: string; quantity: number; price?: string | number }[]
     totalAmount: number
     paymentMethod: "cod" | "online"
     isPaid: boolean
     status: "pending" | "out of delivery" | "delivered"
-    address: { fullName: string }
+    address: { fullName: string; mobile?: string; city?: string; fullAddress?: string }
     createdAt: string
 }
 
@@ -72,21 +72,21 @@ const AdminDashboard = () => {
         }
         load()
     }, [])
+    const validOrders = orders.filter((o) => o.paymentMethod === "cod" || o.isPaid)
+    const pendingOrders = validOrders
+    .filter((o) => o.status === "pending")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    const pendingOrders = orders
-        .filter((o) => o.status === "pending")
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    const revenue = orders
-        .filter((o) => o.isPaid || o.status === "delivered")
-        .reduce((sum, o) => sum + Number(o.totalAmount), 0)
-
+const revenue = validOrders
+    .filter((o) => o.isPaid || o.status === "delivered")
+    .reduce((sum, o) => sum + Number(o.totalAmount), 0)
     // Orders per day for the last 7 days (today is the last bar)
     const weekData = useMemo(() => {
         const base = now ?? new Date()
         return Array.from({ length: 7 }, (_, idx) => {
             const d = new Date(base)
             d.setDate(d.getDate() - (6 - idx))
-            const count = orders.filter((o) => new Date(o.createdAt).toDateString() === d.toDateString()).length
+            const count = validOrders.filter((o) => new Date(o.createdAt).toDateString() === d.toDateString()).length
             return {
                 label: idx === 6 ? "Today" : d.toLocaleDateString('en-GB', { weekday: 'short' }),
                 full: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
@@ -94,7 +94,7 @@ const AdminDashboard = () => {
                 isToday: idx === 6,
             }
         })
-    }, [orders, now])
+    }, [validOrders, now])
     const weekTotal = weekData.reduce((sum, d) => sum + d.count, 0)
     const maxCount = Math.max(1, ...weekData.map((d) => d.count))
 
@@ -106,15 +106,15 @@ const AdminDashboard = () => {
         : ""
 
     const stats = [
-        { label: "Total orders", value: orders.length, hint: "All time", icon: Package, tint: "bg-blue-100 text-blue-600" },
+        { label: "Total orders", value: validOrders.length, hint: "All time", icon: Package, tint: "bg-blue-100 text-blue-600" },
         { label: "Pending orders", value: pendingOrders.length, hint: "Waiting for you", icon: Clock, tint: "bg-yellow-100 text-yellow-700" },
         { label: "Revenue", value: `Rs ${revenue.toLocaleString('en-IN')}`, hint: "Paid or delivered", icon: Banknote, tint: "bg-green-100 text-green-700" },
         { label: "Products", value: groceries.length, hint: "In your store", icon: Boxes, tint: "bg-purple-100 text-purple-600" },
     ]
 
     return (
-        <div className='w-[94%] md:w-[90%] max-w-6xl mx-auto pt-28 pb-12'>
-            {/* Greeting */}
+        <div className='w-[94%] md:w-[90%] max-w-6xl mx-auto pt-36 pb-12'>
+            
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6'>
-                {/* Quick actions — first on phones/tablets (the mobile menu has no links), right column on desktop */}
+                {/* Quick actions — first on phones/tablets, right column on desktop */}
                 <div className='lg:order-2'>
                     <h2 className='text-base font-semibold text-gray-800 mb-3'>Quick actions</h2>
                     <div className='grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3'>
@@ -203,67 +203,109 @@ const AdminDashboard = () => {
                             View all
                         </Link>
                     </div>
-                    <div className='bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden'>
-                        {loading ? (
-                            <div className='divide-y divide-gray-100'>
-                                {[0, 1, 2].map((i) => (
-                                    <div key={i} className='flex items-center gap-3 px-4 sm:px-5 py-4'>
-                                        <div className='w-10 h-10 rounded-full bg-gray-100 animate-pulse shrink-0' />
-                                        <div className='flex-1 space-y-2'>
-                                            <div className='h-3.5 w-32 bg-gray-100 rounded animate-pulse' />
-                                            <div className='h-3 w-24 bg-gray-100 rounded animate-pulse' />
-                                        </div>
-                                        <div className='h-4 w-14 bg-gray-100 rounded animate-pulse' />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : pendingOrders.length === 0 ? (
-                            <div className='text-center py-12 px-4'>
-                                <CheckCircle2 className='w-12 h-12 text-green-500 mx-auto mb-3' />
-                                <p className='text-gray-800 font-medium'>All caught up</p>
-                                <p className='text-sm text-gray-500 mt-1'>No orders are waiting for you right now.</p>
-                            </div>
-                        ) : (
-                            <div className='divide-y divide-gray-100'>
-                                {pendingOrders.slice(0, 5).map((o) => {
-                                    const itemCount = o.items.reduce((n, it) => n + it.quantity, 0)
-                                    return (
-                                        <Link
-                                            key={o._id}
-                                            href='/admin/manage-orders'
-                                            className='flex items-center gap-3 px-4 sm:px-5 py-3.5 hover:bg-gray-50 transition-colors'
-                                        >
-                                            <span className='w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center shrink-0'>
-                                                <Package size={18} className='text-yellow-700' />
-                                            </span>
-                                            <div className='flex-1 min-w-0'>
-                                                <p className='text-sm font-medium text-gray-800 truncate'>
-                                                    {o.user?.name || o.address.fullName}
-                                                </p>
-                                                <p className='text-xs text-gray-500 truncate'>
-                                                    #{o._id.slice(-6)} • {itemCount} {itemCount === 1 ? 'item' : 'items'} • {timeAgo(o.createdAt)}
-                                                </p>
+
+                    {loading ? (
+                        <div className='space-y-3'>
+                            {[0, 1, 2].map((i) => (
+                                <div key={i} className='bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3'>
+                                    <div className='h-4 w-40 bg-gray-100 rounded animate-pulse' />
+                                    <div className='h-3 w-56 bg-gray-100 rounded animate-pulse' />
+                                    <div className='h-3 w-32 bg-gray-100 rounded animate-pulse' />
+                                </div>
+                            ))}
+                        </div>
+                    ) : pendingOrders.length === 0 ? (
+                        <div className='bg-white rounded-xl border border-gray-100 shadow-sm text-center py-12 px-4'>
+                            <CheckCircle2 className='w-12 h-12 text-green-500 mx-auto mb-3' />
+                            <p className='text-gray-800 font-medium'>All caught up</p>
+                            <p className='text-sm text-gray-500 mt-1'>No orders are waiting for you right now.</p>
+                        </div>
+                    ) : (
+                        <div className='space-y-3'>
+                            {pendingOrders.slice(0, 5).map((o) => {
+                                const itemCount = o.items.reduce((n, it) => n + it.quantity, 0)
+                                return (
+                                    <Link
+                                        key={o._id}
+                                        href='/admin/manage-orders'
+                                        className='block bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-200 transition-all p-4 sm:p-5'
+                                    >
+                                        {/* Top: order id + status + time */}
+                                        <div className='flex items-center justify-between gap-2'>
+                                            <div className='flex items-center gap-2 min-w-0'>
+                                                <span className='w-9 h-9 rounded-full bg-yellow-100 flex items-center justify-center shrink-0'>
+                                                    <Package size={18} className='text-yellow-700' />
+                                                </span>
+                                                <div className='min-w-0'>
+                                                    <p className='text-sm font-semibold text-gray-800'>Order #{o._id.slice(-6)}</p>
+                                                    <p className='text-xs text-gray-500'>{timeAgo(o.createdAt)}</p>
+                                                </div>
                                             </div>
-                                            <div className='text-right shrink-0'>
-                                                <p className='text-sm font-semibold text-gray-800'>Rs {o.totalAmount}</p>
+                                            <span className='text-[11px] font-medium px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 capitalize shrink-0'>
+                                                {o.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Customer + address */}
+                                        <div className='mt-3 space-y-1.5 text-sm'>
+                                            <p className='font-medium text-gray-800'>{o.user?.name || o.address.fullName}</p>
+                                            {o.address.mobile && (
+                                                <p className='flex items-center gap-1.5 text-xs text-gray-500'>
+                                                    <Phone size={13} /> {o.address.mobile}
+                                                </p>
+                                            )}
+                                            {(o.address.fullAddress || o.address.city) && (
+                                                <p className='flex items-start gap-1.5 text-xs text-gray-500'>
+                                                    <MapPin size={13} className='mt-0.5 shrink-0' />
+                                                    <span>{[o.address.fullAddress, o.address.city].filter(Boolean).join(', ')}</span>
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Items */}
+                                        <div className='mt-3 rounded-lg bg-gray-50 px-3 py-2'>
+                                            <p className='text-xs font-medium text-gray-600 mb-1'>
+                                                {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                                            </p>
+                                            {o.items.length === 0 ? (
+                                                <p className='text-xs text-gray-400'>No items</p>
+                                            ) : (
+                                                <ul className='space-y-0.5'>
+                                                    {o.items.map((it, idx) => (
+                                                        <li key={idx} className='flex justify-between text-xs text-gray-600'>
+                                                            <span className='truncate'>{it.name || 'Item'}</span>
+                                                            <span className='shrink-0 ml-2'>x{it.quantity}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+
+                                        {/* Payment + total */}
+                                        <div className='mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap'>
+                                            <div className='flex items-center gap-2 flex-wrap'>
+                                                <span className='inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700'>
+                                                    {o.paymentMethod === "cod" ? <Wallet size={12} /> : <CreditCard size={12} />}
+                                                    {o.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}
+                                                </span>
                                                 <span
-                                                    className={`inline-block mt-0.5 text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                                                        o.paymentMethod === "cod"
-                                                            ? "bg-gray-100 text-gray-600"
-                                                            : o.isPaid
-                                                                ? "bg-green-100 text-green-700"
-                                                                : "bg-red-100 text-red-600"
+                                                    className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${
+                                                        o.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
                                                     }`}
                                                 >
-                                                    {o.paymentMethod === "cod" ? "COD" : o.isPaid ? "Paid" : "Unpaid"}
+                                                    {o.isPaid ? "Paid" : "Unpaid"}
                                                 </span>
                                             </div>
-                                        </Link>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </div>
+                                            <div className='text-right'>
+                                                <p className='text-[11px] text-gray-400'>Total</p>
+                                                <p className='text-base font-bold text-gray-800'>Rs {o.totalAmount}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
 

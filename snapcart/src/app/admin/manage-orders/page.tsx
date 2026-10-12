@@ -72,7 +72,7 @@ const ManageOrders = () => {
     }
     getOrders()
   }, [])
-
+  const validOrders = orders.filter((o) => o.paymentMethod === "cod" || o.isPaid)
   const handleStatusChange = async (orderId: string, status: string) => {
     setUpdatingId(orderId)
     try {
@@ -127,10 +127,10 @@ const ManageOrders = () => {
                         <Package className='text-green-600' size={18} />
                         <span className='font-semibold text-gray-800'>Order #{order._id.slice(-6)}</span>
                         <span className={`inline-block mt-1.9 text-xs px-5 py-0.5 rounded-full font-medium ${order.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                        {order.isPaid ? "Paid" : "Unpaid"}
-                      </span>
+                          {order.isPaid ? "Paid" : "Unpaid"}
+                        </span>
                       </div>
-                      
+
                       <p className='text-xs text-gray-400 mt-1.5'>
                         {new Date(order.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -152,7 +152,7 @@ const ManageOrders = () => {
                     </div>
                   </div>
 
-                 
+
                   <div className='mt-3 space-y-1.5 text-sm text-gray-600'>
                     <div className='flex items-center gap-2'>
                       <User size={14} className='text-green-600' />
