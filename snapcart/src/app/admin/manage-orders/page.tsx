@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Package, User, Phone, MapPin, CreditCard, Truck, ChevronDown, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
-import { Router } from 'next/router'
 import { useRouter } from 'next/navigation'
 
 interface IOrderItem {
@@ -72,7 +71,10 @@ const ManageOrders = () => {
     }
     getOrders()
   }, [])
+
+  // Online payment ko order paid nabhayesamma dekhaudaina (payment cancel/fail ho sakchha)
   const validOrders = orders.filter((o) => o.paymentMethod === "cod" || o.isPaid)
+
   const handleStatusChange = async (orderId: string, status: string) => {
     setUpdatingId(orderId)
     try {
@@ -90,27 +92,36 @@ const ManageOrders = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 w-full py-5'>
-      <div className='w-[94%] sm:w-[90%] md:w-[70%] mx-auto'>
+    <div className='min-h-screen bg-gray-50 w-full py-4 sm:py-6'>
+      <div className='w-[94%] sm:w-[92%] lg:w-[90%] max-w-6xl mx-auto'>
         <button
           onClick={() => router.push("/")}
-          className='flex items-center gap-2 border-green-400 border-2 p-1 bg-amber-50 rounded-full text-green-700 hover:text-green-800 font-medium text-sm mb-6'
+          className='inline-flex items-center gap-2 border-green-400 border-2 px-3 py-1 bg-amber-50 rounded-full text-green-700 hover:text-green-800 font-medium text-sm mb-5'
         >
           <ArrowLeft size={16} />
           Back
         </button>
-        <h1 className='text-xl sm:text-2xl font-bold text-green-700 text-center mb-5'>Manage Orders</h1>
+
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5'>
+          <h1 className='text-xl sm:text-2xl font-bold text-green-700 text-center sm:text-left'>Manage Orders</h1>
+          {!loading && validOrders.length > 0 && (
+            <span className='self-center sm:self-auto text-xs font-medium text-green-700 bg-green-100 px-3 py-1 rounded-full'>
+              {validOrders.length} {validOrders.length === 1 ? 'order' : 'orders'}
+            </span>
+          )}
+        </div>
 
         {loading ? (
           <p className='text-center text-gray-500 py-16'>Loading orders...</p>
-        ) : orders.length === 0 ? (
+        ) : validOrders.length === 0 ? (
           <div className='text-center py-20 border border-gray-200 rounded-xl bg-white'>
             <Package className='w-14 h-14 text-gray-300 mx-auto mb-4' />
             <p className='text-gray-700 font-medium'>No orders yet</p>
           </div>
         ) : (
-          <div className='space-y-5'>
-            {orders.map((order) => {
+          // Phone/tablet: 1 column, large laptop/PC: 2 columns
+          <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 items-start'>
+            {validOrders.map((order) => {
               const isExpanded = !!expandedIds[order._id]
               return (
                 <motion.div
@@ -118,24 +129,24 @@ const ManageOrders = () => {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
-                  className='bg-white rounded-xl shadow-sm border border-gray-100 p-5'
+                  className='bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 min-w-0'
                 >
-                  {/* Top: order id, paid badge, date  —  status badge + dropdown */}
-                  <div className='flex items-start justify-between gap-3'>
-                    <div>
-                      <div className='flex items-center gap-2'>
-                        <Package className='text-green-600' size={18} />
+                  {/* Top: order id + paid badge + date  |  status badge + dropdown */}
+                  <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3'>
+                    <div className='min-w-0'>
+                      <div className='flex items-center gap-2 flex-wrap'>
+                        <Package className='text-green-600 shrink-0' size={18} />
                         <span className='font-semibold text-gray-800'>Order #{order._id.slice(-6)}</span>
-                        <span className={`inline-block mt-1.9 text-xs px-5 py-0.5 rounded-full font-medium ${order.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                        <span className={`text-xs px-3 py-0.5 rounded-full font-medium ${order.isPaid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
                           {order.isPaid ? "Paid" : "Unpaid"}
                         </span>
                       </div>
-
                       <p className='text-xs text-gray-400 mt-1.5'>
                         {new Date(order.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
-                    <div className='flex flex-col items-end gap-2'>
+
+                    <div className='flex items-center justify-between sm:flex-col sm:items-end gap-2'>
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${statusBadge[order.status]}`}>
                         {order.status}
                       </span>
@@ -152,34 +163,36 @@ const ManageOrders = () => {
                     </div>
                   </div>
 
-
-                  <div className='mt-3 space-y-1.5 text-sm text-gray-600'>
-                    <div className='flex items-center gap-2'>
-                      <User size={14} className='text-green-600' />
-                      {order.user?.name || order.address.fullName}
+                  {/* Customer details: 1 column on phone, 2 columns from tablet up */}
+                  <div className='mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-600'>
+                    <div className='flex items-center gap-2 min-w-0'>
+                      <User size={14} className='text-green-600 shrink-0' />
+                      <span className='truncate'>{order.user?.name || order.address.fullName}</span>
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <Phone size={14} className='text-green-600' />
-                      {order.address.mobile}
+                    <div className='flex items-center gap-2 min-w-0'>
+                      <Phone size={14} className='text-green-600 shrink-0' />
+                      <span className='truncate'>{order.address.mobile}</span>
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <MapPin size={14} className='text-green-600 shrink-0' />
-                      {order.address.fullAddress}, {order.address.city}, {order.address.state}
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <CreditCard size={14} className='text-green-600' />
+                    <div className='flex items-center gap-2 min-w-0'>
+                      <CreditCard size={14} className='text-green-600 shrink-0' />
                       {order.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}
+                    </div>
+                    <div className='flex items-start gap-2 sm:col-span-2'>
+                      <MapPin size={14} className='text-green-600 shrink-0 mt-0.5' />
+                      <span className='wrap-break-word min-w-0'>
+                        {[order.address.fullAddress, order.address.city, order.address.state].filter(Boolean).join(', ')}
+                      </span>
                     </div>
                   </div>
 
                   {/* Collapsible items list */}
                   <button
                     onClick={() => toggleExpand(order._id)}
-                    className='flex items-center justify-between w-full mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 hover:text-gray-800 transition-colors'
+                    className='flex items-center justify-between w-full mt-4 pt-3 border-t border-gray-100 text-sm text-gray-600 hover:text-gray-800 transition-colors'
                   >
                     <span className='flex items-center gap-2'>
                       <Package size={14} className='text-green-600' />
-                      view {order.items.length} items
+                      View {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
                     </span>
                     <motion.span animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown size={16} />
@@ -205,7 +218,7 @@ const ManageOrders = () => {
                                 <p className='text-gray-800 truncate'>{item.name}</p>
                                 <p className='text-xs text-gray-400'>{item.quantity} {item.unit} × Rs {item.price}</p>
                               </div>
-                              <p className='font-medium text-gray-700'>Rs {Number(item.price) * item.quantity}</p>
+                              <p className='font-medium text-gray-700 shrink-0'>Rs {Number(item.price) * item.quantity}</p>
                             </div>
                           ))}
                         </div>
@@ -214,10 +227,10 @@ const ManageOrders = () => {
                   </AnimatePresence>
 
                   {/* Footer */}
-                  <div className='flex items-center justify-between mt-3 pt-3 border-t border-gray-100 text-sm'>
+                  <div className='flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-gray-100 text-sm'>
                     <span className='flex items-center gap-1.5'>
                       <Truck size={14} className={deliveryTextColor[order.status]} />
-                      Delivery: <span className={`font-medium ${deliveryTextColor[order.status]}`}>{order.status}</span>
+                      Delivery: <span className={`font-medium capitalize ${deliveryTextColor[order.status]}`}>{order.status}</span>
                     </span>
                     <span className='font-semibold text-gray-800'>Total: Rs {order.totalAmount}</span>
                   </div>
