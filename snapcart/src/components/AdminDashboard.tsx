@@ -1,8 +1,9 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
 import { ArrowRight, Banknote, Boxes, CheckCircle2, Clipboard, Clock, Package, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import axios from 'axios'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
@@ -17,6 +18,14 @@ interface IOrder {
     status: "pending" | "out of delivery" | "delivered"
     address: { fullName: string }
     createdAt: string
+}
+
+interface IGrocery {
+    _id: string
+    name: string
+    price: string
+    unit: string
+    image: string
 }
 
 const timeAgo = (dateStr: string) => {
@@ -37,7 +46,7 @@ const quickActions = [
 const AdminDashboard = () => {
     const { userData } = useSelector((state: RootState) => state.user)
     const [orders, setOrders] = useState<IOrder[]>([])
-    const [productCount, setProductCount] = useState(0)
+    const [groceries, setGroceries] = useState<IGrocery[]>([])
     const [loading, setLoading] = useState(true)
     const [loadFailed, setLoadFailed] = useState(false)
     const [now, setNow] = useState<Date | null>(null)
@@ -56,7 +65,7 @@ const AdminDashboard = () => {
             let failed = false
             if (ordersRes.status === "fulfilled") setOrders(ordersRes.value.data)
             else { failed = true; console.log('Failed to fetch orders', ordersRes.reason) }
-            if (groceriesRes.status === "fulfilled") setProductCount(groceriesRes.value.data.length)
+            if (groceriesRes.status === "fulfilled") setGroceries(groceriesRes.value.data)
             else { failed = true; console.log('Failed to fetch groceries', groceriesRes.reason) }
             setLoadFailed(failed)
             setLoading(false)
@@ -71,6 +80,24 @@ const AdminDashboard = () => {
         .filter((o) => o.isPaid || o.status === "delivered")
         .reduce((sum, o) => sum + Number(o.totalAmount), 0)
 
+    // Orders per day for the last 7 days (today is the last bar)
+    const weekData = useMemo(() => {
+        const base = now ?? new Date()
+        return Array.from({ length: 7 }, (_, idx) => {
+            const d = new Date(base)
+            d.setDate(d.getDate() - (6 - idx))
+            const count = orders.filter((o) => new Date(o.createdAt).toDateString() === d.toDateString()).length
+            return {
+                label: idx === 6 ? "Today" : d.toLocaleDateString('en-GB', { weekday: 'short' }),
+                full: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+                count,
+                isToday: idx === 6,
+            }
+        })
+    }, [orders, now])
+    const weekTotal = weekData.reduce((sum, d) => sum + d.count, 0)
+    const maxCount = Math.max(1, ...weekData.map((d) => d.count))
+
     const hour = now ? now.getHours() : 12
     const greeting = !now ? "Welcome back" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
     const firstName = userData?.name?.split(" ")[0]
@@ -82,7 +109,7 @@ const AdminDashboard = () => {
         { label: "Total orders", value: orders.length, hint: "All time", icon: Package, tint: "bg-blue-100 text-blue-600" },
         { label: "Pending orders", value: pendingOrders.length, hint: "Waiting for you", icon: Clock, tint: "bg-yellow-100 text-yellow-700" },
         { label: "Revenue", value: `Rs ${revenue.toLocaleString('en-IN')}`, hint: "Paid or delivered", icon: Banknote, tint: "bg-green-100 text-green-700" },
-        { label: "Products", value: productCount, hint: "In your store", icon: Boxes, tint: "bg-purple-100 text-purple-600" },
+        { label: "Products", value: groceries.length, hint: "In your store", icon: Boxes, tint: "bg-purple-100 text-purple-600" },
     ]
 
     return (
@@ -234,6 +261,105 @@ const AdminDashboard = () => {
                                         </Link>
                                     )
                                 })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-6'>
+                {/* Orders — last 7 days */}
+                <div className='lg:col-span-2'>
+                    <div className='flex items-center justify-between mb-3'>
+                        <h2 className='text-base font-semibold text-gray-800'>Orders in the last 7 days</h2>
+                        {!loading && (
+                            <span className='text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full'>
+                                {weekTotal} {weekTotal === 1 ? 'order' : 'orders'}
+                            </span>
+                        )}
+                    </div>
+                    <div className='bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5'>
+                        {loading ? (
+                            <div className='h-44 bg-gray-50 rounded-lg animate-pulse' />
+                        ) : (
+                            <>
+                                <div className='flex items-end justify-between gap-2 sm:gap-4 h-44'>
+                                    {weekData.map((d, i) => (
+                                        <div
+                                            key={i}
+                                            title={`${d.full}: ${d.count} ${d.count === 1 ? 'order' : 'orders'}`}
+                                            className='flex-1 flex flex-col items-center justify-end h-full'
+                                        >
+                                            <span className={`text-xs font-medium mb-1 ${d.count > 0 ? 'text-gray-700' : 'text-gray-300'}`}>
+                                                {d.count}
+                                            </span>
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: d.count === 0 ? 4 : Math.max(8, (d.count / maxCount) * 112) }}
+                                                transition={{ duration: 0.5, delay: i * 0.05 }}
+                                                className={`w-full max-w-10 rounded-t-md ${
+                                                    d.count === 0 ? "bg-gray-200" : d.isToday ? "bg-green-600" : "bg-green-300"
+                                                }`}
+                                            />
+                                            <span className={`text-[11px] sm:text-xs mt-2 ${d.isToday ? 'font-semibold text-green-700' : 'text-gray-500'}`}>
+                                                {d.label}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {weekTotal === 0 && (
+                                    <p className='text-center text-xs text-gray-400 mt-4'>No orders in the last 7 days.</p>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Recently added products */}
+                <div>
+                    <div className='flex items-center justify-between mb-3'>
+                        <h2 className='text-base font-semibold text-gray-800'>Recently added</h2>
+                        <Link href='/admin/view-grocery' className='text-sm font-medium text-green-700 hover:text-green-800'>
+                            View all
+                        </Link>
+                    </div>
+                    <div className='bg-white rounded-xl border border-gray-100 shadow-sm p-4'>
+                        {loading ? (
+                            <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3'>
+                                {[0, 1, 2, 3].map((i) => (
+                                    <div key={i}>
+                                        <div className='aspect-square rounded-lg bg-gray-100 animate-pulse' />
+                                        <div className='h-3.5 w-20 bg-gray-100 rounded animate-pulse mt-2' />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : groceries.length === 0 ? (
+                            <div className='text-center py-8'>
+                                <Boxes className='w-10 h-10 text-gray-300 mx-auto mb-2' />
+                                <p className='text-sm text-gray-500 mb-3'>No products yet</p>
+                                <Link href='/admin/add-grocery' className='text-sm font-medium text-green-700 hover:text-green-800'>
+                                    Add your first grocery
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3'>
+                                {groceries.slice(0, 4).map((g) => (
+                                    <Link key={g._id} href='/admin/view-grocery' className='group block'>
+                                        <div className='relative aspect-square rounded-lg bg-gray-50 border border-gray-100 overflow-hidden'>
+                                            <Image
+                                                src={g.image}
+                                                alt={g.name}
+                                                fill
+                                                sizes='(max-width:640px) 45vw, 160px'
+                                                className='object-contain p-2 transition-transform duration-300 group-hover:scale-105'
+                                            />
+                                        </div>
+                                        <p className='text-sm font-medium text-gray-800 truncate mt-2'>{g.name}</p>
+                                        <p className='text-xs text-gray-500'>
+                                            <span className='text-green-700 font-semibold'>Rs {g.price}</span> / {g.unit}
+                                        </p>
+                                    </Link>
+                                ))}
                             </div>
                         )}
                     </div>
