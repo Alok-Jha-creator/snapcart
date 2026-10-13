@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
         }
         order.status = status
         let deliveryBoysPayload: any = []
-        if (status === "out of delivery" && !order.assignment) {
+        if (status === "out of delivery" && !order.assignement) {
             const { latitude, longitude } = order.address
             const nearByDeliveryBoys = await User.find({
                 role: "deliveryBoy",
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
                 broadcastedTo: candidates,
                 status: "broadcasted"
             })
-            order.assignment = assignment._id
+            order.assignement  = assignment._id
             deliveryBoysPayload = availableDeliveryBoys.map((b) => ({
                 id: b._id,
                 name: b.name,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
         }
         await order.save()
         return NextResponse.json({
-            assignment: order.assignment,
+            assignment: order.assignement,
             availableBoys: deliveryBoysPayload
         }, { status: 200 })
     } catch (error) {
