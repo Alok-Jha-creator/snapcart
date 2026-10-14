@@ -1,5 +1,3 @@
-import { log } from "console"
-import { ToyBrick } from "lucide-react"
 import { getToken } from "next-auth/jwt"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -9,28 +7,37 @@ export default async function proxy(req: NextRequest) {
   if (publicRoutes.some((path) => pathname.startsWith(path))) {
     return NextResponse.next()
   }
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
-  console.log(token)
+
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === "production",
+    salt:
+      process.env.NODE_ENV === "production"
+        ? "__Secure-authjs.session-token"
+        : "authjs.session-token",
+  })
+
   if (!token) {
-    console.log(req.url)
-    const loginUrl=new URL("/login", req.url)
+    const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("callbackUrl", req.url)
     return NextResponse.redirect(loginUrl)
   }
-  const role =token.role
-  if(pathname.startsWith("/user") && role!=="user"){
-    return NextResponse.redirect(new URL("/unathorized",req.url))
-  }
-  if(pathname.startsWith("/delivery") && role!=="deliveryBoy"){
-    return NextResponse.redirect(new URL("/unathorized",req.url))
-  }
-  if(pathname.startsWith("/admin") && role!=="admin"){
-    return NextResponse.redirect(new URL("/unathorized",req.url))
-  }
 
+  const role = token.role
+  if (pathname.startsWith("/user") && role !== "user") {
+    return NextResponse.redirect(new URL("/unathorized", req.url))
+  }
+  if (pathname.startsWith("/delivery") && role !== "deliveryBoy") {
+    return NextResponse.redirect(new URL("/unathorized", req.url))
+  }
+  if (pathname.startsWith("/admin") && role !== "admin") {
+    return NextResponse.redirect(new URL("/unathorized", req.url))
+  }
 
   return NextResponse.next()
 }
+
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }
