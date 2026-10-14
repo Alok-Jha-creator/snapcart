@@ -11,26 +11,34 @@ import { redirect } from 'next/navigation'
 import React from 'react'
 
 const Home = async () => {
-  await connectDb()
   const session = await auth()
-  const user = await User.findById(session?.user?.id)
+  if (!session?.user?.id) {
+    redirect('/login')
+  }
+
+  await connectDb()
+  const user = await User.findById(session.user.id)
   if (!user) {
     redirect('/login')
   }
+
   const inComplete = !user.mobile || !user.role || (!user.mobile && user.role === 'user')
   if (inComplete) {
     return <EditRoleMobile />
   }
+
   const plainUser = JSON.parse(JSON.stringify(user))
   return (
     <>
       <Nav user={plainUser} />
-      <GeoUpdater userId={plainUser._id}/>
+      <GeoUpdater userId={plainUser._id} />
       {user.role == "user" ? (
         <UserDashboard />
       ) : user.role == "admin" ? (
         <AdminDashboard />
-      ) : <DeliveryBoy />}
+      ) : (
+        <DeliveryBoy />
+      )}
     </>
   )
 }
