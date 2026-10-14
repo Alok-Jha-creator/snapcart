@@ -13,7 +13,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     const { id } = await params
     await connectDb()
-
     // Atomic update: duita delivery boy le ek-sath accept garda ek jana le matra paunchha
     const assignment = await DeliveryAssignment.findOneAndUpdate(
       { _id: id, status: "broadcasted", broadcastedTo: userId },
