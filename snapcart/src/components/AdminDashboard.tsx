@@ -80,7 +80,6 @@ const AdminDashboard = () => {
 const revenue = validOrders
     .filter((o) => o.isPaid || o.status === "delivered")
     .reduce((sum, o) => sum + Number(o.totalAmount), 0)
-    // Orders per day for the last 7 days (today is the last bar)
     const weekData = useMemo(() => {
         const base = now ?? new Date()
         return Array.from({ length: 7 }, (_, idx) => {
@@ -113,8 +112,7 @@ const revenue = validOrders
     ]
 
     return (
-        <div className='w-[94%] md:w-[90%] max-w-6xl mx-auto pt-36 pb-12'>
-            
+        <div className='w-[94%] md:w-[90%] max-w-6xl mx-auto pt-36 pb-12'>  
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -143,7 +141,6 @@ const revenue = validOrders
                 </div>
             )}
 
-            {/* Stats */}
             <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6'>
                 {stats.map((s, i) => (
                     <motion.div
@@ -172,7 +169,6 @@ const revenue = validOrders
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6'>
-                {/* Quick actions — first on phones/tablets, right column on desktop */}
                 <div className='lg:order-2'>
                     <h2 className='text-base font-semibold text-gray-800 mb-3'>Quick actions</h2>
                     <div className='grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3'>
@@ -195,7 +191,6 @@ const revenue = validOrders
                     </div>
                 </div>
 
-                {/* Pending orders */}
                 <div className='lg:col-span-2 lg:order-1'>
                     <div className='flex items-center justify-between mb-3'>
                         <h2 className='text-base font-semibold text-gray-800'>Pending orders</h2>
@@ -230,7 +225,6 @@ const revenue = validOrders
                                         href='/admin/manage-orders'
                                         className='block bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-200 transition-all p-4 sm:p-5'
                                     >
-                                        {/* Top: order id + status + time */}
                                         <div className='flex items-center justify-between gap-2'>
                                             <div className='flex items-center gap-2 min-w-0'>
                                                 <span className='w-9 h-9 rounded-full bg-yellow-100 flex items-center justify-center shrink-0'>
@@ -262,7 +256,6 @@ const revenue = validOrders
                                             )}
                                         </div>
 
-                                        {/* Items */}
                                         <div className='mt-3 rounded-lg bg-gray-50 px-3 py-2'>
                                             <p className='text-xs font-medium text-gray-600 mb-1'>
                                                 {itemCount} {itemCount === 1 ? 'item' : 'items'}
@@ -281,7 +274,6 @@ const revenue = validOrders
                                             )}
                                         </div>
 
-                                        {/* Payment + total */}
                                         <div className='mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap'>
                                             <div className='flex items-center gap-2 flex-wrap'>
                                                 <span className='inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700'>
@@ -310,7 +302,6 @@ const revenue = validOrders
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-6'>
-                {/* Orders — last 7 days */}
                 <div className='lg:col-span-2'>
                     <div className='flex items-center justify-between mb-3'>
                         <h2 className='text-base font-semibold text-gray-800'>Orders in the last 7 days</h2>
@@ -357,7 +348,6 @@ const revenue = validOrders
                     </div>
                 </div>
 
-                {/* Recently added products */}
                 <div>
                     <div className='flex items-center justify-between mb-3'>
                         <h2 className='text-base font-semibold text-gray-800'>Recently added</h2>

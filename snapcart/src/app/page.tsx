@@ -8,7 +8,6 @@ import UserDashboard from '@/components/UserDashboard'
 import connectDb from '@/lib/db'
 import User from '@/models/user.model'
 import { redirect } from 'next/navigation'
-import React from 'react'
 
 const Home = async () => {
   const session = await auth()
