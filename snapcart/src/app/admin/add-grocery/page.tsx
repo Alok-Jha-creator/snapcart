@@ -24,6 +24,7 @@ const units = [
 const AddGrocery = () => {
   const [name, setName] = useState("")
   const [category, setCategory] = useState("")
+  const [description,setDescription]= useState("")
   const [unit, setUnit] = useState("")
   const [loading,setLoading]= useState(false)
   const [price, setPrice] = useState("")
@@ -43,6 +44,7 @@ const AddGrocery = () => {
       const formData=new FormData()
       formData.append("name",name)
       formData.append("category",category)
+      formData.append("description",description)
       formData.append("price",price)
       formData.append("unit",unit)
       if(backendImage){
@@ -124,6 +126,16 @@ const AddGrocery = () => {
             <input type="text" id='price' placeholder='eg:500,1000,...' className='w-full border border-gray-300 rounded-xl px-3 py-3 outline-none focus:ring-green-400 transition-all'
               onChange={(e) => setPrice(e.target.value)}
               value={price}
+            />
+          </div>
+          <div>
+            <label htmlFor="price" className='block text-gray-700 font-medium mb-1'>
+              Grocery Description
+              <span className='text-red-600'>*</span>
+            </label>
+            <input type="text" id='price' placeholder='eg:product description...' className='w-full border border-gray-300 rounded-xl px-6 py-8 outline-none focus:ring-green-400 transition-all'
+              onChange={(e) => setPrice(e.target.value)}
+              value={description}
             />
           </div>
 

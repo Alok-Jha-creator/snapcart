@@ -7,6 +7,7 @@ interface IGrocery {
     price: string,
     unit: string,
     image: string,
+    description:string
     createdAt?: Date,
     updatedAt?: Date
 }
@@ -30,6 +31,10 @@ const grocerySchema = new mongoose.Schema<IGrocery>({
         required: true
     },
     price: {
+        type: String,
+        required: true,
+    },
+    description: {
         type: String,
         required: true,
     },
