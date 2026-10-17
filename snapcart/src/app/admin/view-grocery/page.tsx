@@ -13,6 +13,7 @@ interface IGrocery {
     category: string
     price: string
     unit: string
+    description:string
     image: string
     createdAt?: string
 }
@@ -45,7 +46,7 @@ const ViewGrocery = () => {
 
     const [editItem, setEditItem] = useState<IGrocery | null>(null)
     const [deleteItem, setDeleteItem] = useState<IGrocery | null>(null)
-    const [form, setForm] = useState({ name: "", category: "", unit: "", price: "" })
+    const [form, setForm] = useState({ name: "", category: "",description:"", unit: "", price: "" })
     const [busy, setBusy] = useState(false)
     const [modalError, setModalError] = useState("")
 
@@ -84,7 +85,7 @@ const ViewGrocery = () => {
 
     const openEdit = (item: IGrocery) => {
         setEditItem(item)
-        setForm({ name: item.name, category: item.category, unit: item.unit, price: String(item.price) })
+        setForm({ name: item.name, category: item.category, unit: item.unit, description: item.description, price: String(item.price) })
         setModalError("")
     }
 
@@ -96,7 +97,7 @@ const ViewGrocery = () => {
 
     const handleSave = async () => {
         if (!editItem) return
-        if (!form.name.trim() || !form.category || !form.unit || !form.price.trim() || isNaN(Number(form.price))) {
+        if (!form.name.trim() || !form.category || !form.description || !form.unit || !form.price.trim() || isNaN(Number(form.price))) {
             setModalError("Please fill every field and enter a valid price.")
             return
         }
@@ -233,6 +234,7 @@ const ViewGrocery = () => {
                                         <th className='px-5 py-3 font-medium'>Product</th>
                                         <th className='px-3 py-3 font-medium'>Category</th>
                                         <th className='px-3 py-3 font-medium'>Price</th>
+                                        <th className='px-3 py-3 font-medium'>Description</th>
                                         <th className='px-5 py-3 font-medium text-right'>Actions</th>
                                     </tr>
                                 </thead>
@@ -401,6 +403,16 @@ const ViewGrocery = () => {
                                             inputMode='decimal'
                                             value={form.price}
                                             onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className='block text-sm font-medium text-gray-700 mb-1'>Price (Rs)</label>
+                                        <input
+                                            type="text"
+                                            inputMode='decimal'
+                                            value={form.price}
+                                            onChange={(e) => setForm((p) => ({ ...p, des: e.target.value }))}
                                             className={inputClass}
                                         />
                                     </div>
