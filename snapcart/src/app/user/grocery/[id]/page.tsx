@@ -200,6 +200,8 @@ const GroceryDetail = () => {
                         <span className='text-gray-800'>{item.unit}</span>
                         <span className='text-gray-500'>Price</span>
                         <span className='text-gray-800'>Rs {item.price} per {item.unit}</span>
+                        <span className='text-gray-500'>Description</span>
+                        <span className='text-gray-800'>{item.description}</span>
                     </div>
                 </div>
             </motion.div>

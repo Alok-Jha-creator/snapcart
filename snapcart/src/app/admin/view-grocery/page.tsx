@@ -13,7 +13,7 @@ interface IGrocery {
     category: string
     price: string
     unit: string
-    description:string
+    description: string
     image: string
     createdAt?: string
 }
@@ -46,7 +46,7 @@ const ViewGrocery = () => {
 
     const [editItem, setEditItem] = useState<IGrocery | null>(null)
     const [deleteItem, setDeleteItem] = useState<IGrocery | null>(null)
-    const [form, setForm] = useState({ name: "", category: "",description:"", unit: "", price: "" })
+    const [form, setForm] = useState({ name: "", category: "", description: "", unit: "", price: "" })
     const [busy, setBusy] = useState(false)
     const [modalError, setModalError] = useState("")
 
@@ -71,6 +71,9 @@ const ViewGrocery = () => {
             (q === "" || g.name.toLowerCase().includes(q) || g.category.toLowerCase().includes(q))
         )
         const sorted = [...list]
+        if (sortBy === "newest") {
+            sorted.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+        }
         if (sortBy === "price-low") sorted.sort((a, b) => Number(a.price) - Number(b.price))
         if (sortBy === "price-high") sorted.sort((a, b) => Number(b.price) - Number(a.price))
         if (sortBy === "name") sorted.sort((a, b) => a.name.localeCompare(b.name))
@@ -85,7 +88,13 @@ const ViewGrocery = () => {
 
     const openEdit = (item: IGrocery) => {
         setEditItem(item)
-        setForm({ name: item.name, category: item.category, unit: item.unit, description: item.description, price: String(item.price) })
+        setForm({
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            description: item.description ?? "",
+            price: String(item.price),
+        })
         setModalError("")
     }
 
@@ -97,7 +106,14 @@ const ViewGrocery = () => {
 
     const handleSave = async () => {
         if (!editItem) return
-        if (!form.name.trim() || !form.category || !form.description || !form.unit || !form.price.trim() || isNaN(Number(form.price))) {
+        if (
+            !form.name.trim() ||
+            !form.category ||
+            !form.description.trim() ||
+            !form.unit ||
+            !form.price.trim() ||
+            isNaN(Number(form.price))
+        ) {
             setModalError("Please fill every field and enter a valid price.")
             return
         }
@@ -256,6 +272,9 @@ const ViewGrocery = () => {
                                                 <span className='font-semibold text-green-700'>Rs {g.price}</span>
                                                 <span className='text-xs text-gray-400'> / {g.unit}</span>
                                             </td>
+                                            <td className='px-3 py-3 max-w-55'>
+                                                <p className='text-xs text-gray-600 line-clamp-2'>{g.description}</p>
+                                            </td>
                                             <td className='px-5 py-3'>
                                                 <div className='flex items-center justify-end gap-2'>
                                                     <button
@@ -301,6 +320,9 @@ const ViewGrocery = () => {
                                                 Rs {g.price}
                                                 <span className='text-xs text-gray-400 font-normal'> / {g.unit}</span>
                                             </p>
+                                            {g.description && (
+                                                <p className='text-xs text-gray-500 mt-1 line-clamp-2'>{g.description}</p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className='flex gap-2 mt-3 pt-3 border-t border-gray-100'>
@@ -406,16 +428,15 @@ const ViewGrocery = () => {
                                             className={inputClass}
                                         />
                                     </div>
-                                    <div>
-                                        <label className='block text-sm font-medium text-gray-700 mb-1'>Price (Rs)</label>
-                                        <input
-                                            type="text"
-                                            inputMode='decimal'
-                                            value={form.price}
-                                            onChange={(e) => setForm((p) => ({ ...p, des: e.target.value }))}
-                                            className={inputClass}
-                                        />
-                                    </div>
+                                </div>
+                                <div>
+                                    <label className='block text-sm font-medium text-gray-700 mb-1'>Description</label>
+                                    <textarea
+                                        rows={3}
+                                        value={form.description}
+                                        onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                                        className={`${inputClass} resize-none`}
+                                    />
                                 </div>
                             </div>
 
