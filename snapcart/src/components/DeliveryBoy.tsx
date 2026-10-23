@@ -104,7 +104,7 @@ const beep = () => {
   } catch { /* browser le block garyo bhane chhaddine */ }
 }
 
-/* --------------------------- order card ----------------------------- */
+
 interface CardProps {
   a: IAssignment
   coords: Coords | null
@@ -145,7 +145,7 @@ const OrderCard = ({ a, coords, now, busy, onAccept, onComplete }: CardProps) =>
       transition={{ duration: 0.2 }}
       className={`bg-white rounded-2xl border shadow-sm p-4 sm:p-5 min-w-0 ${isActive ? "border-green-300 ring-1 ring-green-200" : "border-gray-100"}`}
     >
-      {/* header */}
+     
       <div className='flex items-start justify-between gap-2'>
         <div className='flex items-center gap-2.5 min-w-0'>
           <span className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isActive ? "bg-green-600 text-white" : "bg-green-100 text-green-700"}`}>
