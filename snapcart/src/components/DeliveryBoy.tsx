@@ -295,6 +295,7 @@ const DeliveryBoyDashboard = () => {
   const [newAlert, setNewAlert] = useState(0)
   const knownIds = useRef<Set<string> | null>(null)
   const soundRef = useRef(true)
+  const lastSent = useRef(0)
   soundRef.current = sound
 
   const load = useCallback(async (manual = false) => {
@@ -343,7 +344,15 @@ const DeliveryBoyDashboard = () => {
   useEffect(() => {
     if (!navigator.geolocation) return
     const id = navigator.geolocation.watchPosition(
-      (p) => setCoords({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => {
+        const c = { lat: p.coords.latitude, lng: p.coords.longitude }
+        setCoords(c)
+        // Server ma location save garne (har 30 second ma ek palta) taki order broadcast huda bhetiyos
+        if (Date.now() - lastSent.current > 30000) {
+          lastSent.current = Date.now()
+          axios.post('/api/delivery/location', { latitude: c.lat, longitude: c.lng }).catch(() => {})
+        }
+      },
       () => { /* permission nadiye pani app chalchha */ },
       { enableHighAccuracy: true, maximumAge: 15000 }
     )
