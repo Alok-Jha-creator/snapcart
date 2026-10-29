@@ -14,16 +14,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             )
         }
         const { id } = await params
-        const { name, category, unit, price } = await req.json()
-        if (!name || !category || !unit || !price) {
+        const { name, category, unit,description, price } = await req.json()
+        if (!name || !category || !unit ||!description|| !price) {
             return NextResponse.json(
-                { message: "name, category, unit and price are required" },
+                { message: "name, category, unit,description and price are required" },
                 { status: 400 }
             )
         }
         const grocery = await Grocery.findByIdAndUpdate(
             id,
-            { name, category, unit, price },
+            { name, category, unit,description, price },
             { new: true }
         )
         if (!grocery) {

@@ -1,13 +1,12 @@
 'use client'
-import { Boxes, Clipboard, Cross, LogOut, LogOutIcon, Menu, Package, Plus, PlusCircle, Search, SearchIcon, ShoppingCartIcon, User, X, XCircle } from 'lucide-react';
+import { Boxes, Clipboard, LogOut, LogOutIcon, Menu, Package, PlusCircle, Search, ShoppingCartIcon, User, X, XCircle } from 'lucide-react';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image';
-import { pre } from 'motion/react-client';
 import { AnimatePresence, motion } from 'motion/react';
 import { signOut } from 'next-auth/react';
-import { create } from 'domain';
+import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -29,6 +28,8 @@ const Nav = ({ user }: { user: IUser }) => {
   const [searchBarOpen, setSearchBarOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const { cartData } = useSelector((state: RootState) => state.cart)
+  const pathname = usePathname()
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileDropDown.current && !profileDropDown.current.contains(e.target as Node)) {
@@ -38,6 +39,13 @@ const Nav = ({ user }: { user: IUser }) => {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // These admin pages use AdminShell (own sidebar + top bar), so hide this navbar there.
+  // Add a page's path to this list once it is moved to AdminShell. Keep this below every hook.
+  const pagesWithShell = ['/', '/admin', '/admin/add-grocery', '/admin/view-grocery', '/admin/manage-orders', '/admin/settings']
+  const hideNav = user.role === 'admin' && pagesWithShell.includes(pathname ?? '')
+  if (hideNav) return null
+
   const sideBar = menuOpen ? createPortal(
     <AnimatePresence>
       <motion.div
@@ -69,8 +77,8 @@ const Nav = ({ user }: { user: IUser }) => {
 
         <div className='flex flex-col gap-3 font-medium mt-6'>
           <Link href={"/admin/add-grocery"} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><PlusCircle className='w-6 h-6' />Add Grocery</Link>
-          <Link href={""} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><Boxes className='w-6 h-6' />View Grocery</Link>
-          <Link href={""} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><Clipboard className='w-6 h-6' />Manage Orders</Link>
+          <Link href={"/admin/view-grocery"} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><Boxes className='w-6 h-6' />View Grocery</Link>
+          <Link href={"/admin/manage-orders"} className='flex item-center gap-2 bg-white/10 text-green-10 font-semibold px-4 py-2 rounded-lg hover:bg-white/20 transition-all'><Clipboard className='w-6 h-6' />Manage Orders</Link>
         </div>
 
         <div className='my-5 border-t border-white/20'></div>
@@ -81,6 +89,7 @@ const Nav = ({ user }: { user: IUser }) => {
       </motion.div>
     </AnimatePresence>, document.body
   ) : null
+
   return (
     <div className="w-[97%] fixed top-3 left-1/2 -translate-x-1/2 bg-linear-to-r from-green-500 to-green-700 shadow-lg shadow-black/30 rounded-2xl p-4 h-18 px-4 md:px-8 z-50 flex justify-between items-center">
       <Link href={"/"} className='text-white font-bold text-xl sm:text-2xl tracking-wide hover:scale-105 transition-transform'>
@@ -103,9 +112,9 @@ const Nav = ({ user }: { user: IUser }) => {
             <Search className='text-green-600 w-6 h-6' />
           </div>
 
-          <Link href={"/user/cart"} className='flex items-center w-11 h-11 justify-center shadow-md relative gap-1 bg-white hover-scale-105 transition rounded-full'>
+          <Link href={"/user/cart"} className='flex items-center w-11 h-11 justify-center shadow-md relative gap-1 bg-white hover:scale-105 transition rounded-full'>
             <ShoppingCartIcon className='w-6 h-6 text-green-600 ' />
-            <span className='absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semi shadowbold'>{cartData.length}</span>
+            <span className='absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semibold shadow'>{cartData.length}</span>
           </Link>
         </>}
 
@@ -121,7 +130,7 @@ const Nav = ({ user }: { user: IUser }) => {
         </>}
 
         <div className='relative' ref={profileDropDown}>
-          <div className='bg-white w-11 h-11 rounded-full border-2 border-green-400/60 shadow-md flex items-center justify-center overflow-hidden hover:scale-105 transition '
+          <div className='relative bg-white w-11 h-11 rounded-full border-2 border-green-400/60 shadow-md flex items-center justify-center overflow-hidden hover:scale-105 transition '
             onClick={() => setOpen(prev => !prev)}
           >
             {user.image ? <Image src={user.image} alt='user' fill className='object-cover rounded-full' /> : <User />}
