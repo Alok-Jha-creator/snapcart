@@ -70,6 +70,12 @@ const ViewGrocery = () => {
         getGroceries()
     }, [])
 
+    // opened from the Categories page: /admin/view-grocery?category=Dairy%20%26%20Eggs
+    useEffect(() => {
+        const c = new URLSearchParams(window.location.search).get('category')
+        if (c && categories.includes(c)) setCategoryFilter(c)
+    }, [])
+
     // go back to the first page whenever the filters change
     useEffect(() => {
         setPage(1)

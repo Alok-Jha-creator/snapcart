@@ -1,5 +1,6 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import axios from 'axios'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -8,7 +9,7 @@ import { useSelector } from 'react-redux'
 import { AnimatePresence, motion } from 'motion/react'
 import {
     Bell, ChevronDown, ClipboardList, Grid2x2, Home, Leaf, LogOut, Menu, Package,
-    PlusCircle, Search, Settings, ShoppingBag, ShoppingCart, Truck, Users, X,
+    PlusCircle, Search, Settings, ShoppingBag, ShoppingCart, Truck, User, Users, X,
 } from 'lucide-react'
 import { RootState } from '@/redux/store'
 
@@ -24,7 +25,7 @@ const mainNav = [
 // These pages are in the design but not in the project yet — point them to real routes when they exist
 const storeNav = [
     { href: '/admin/view-grocery', label: 'Products', icon: Package },
-    { href: '#', label: 'Categories', icon: Grid2x2 },
+    { href: '/admin/categories', label: 'Categories', icon: Grid2x2 },
     { href: '#', label: 'Suppliers', icon: Truck },
     { href: '#', label: 'Customers', icon: Users },
 ]
@@ -52,7 +53,7 @@ const Basket = () => (
 
 /* -------------------------------- sidebar --------------------------------- */
 
-const SidebarContent = ({ pathname, onNavigate, onClose }: { pathname: string; onNavigate?: () => void; onClose?: () => void }) => {
+const SidebarContent = ({ pathname, onNavigate, onClose, onLogout }: { pathname: string; onNavigate?: () => void; onClose?: () => void; onLogout: () => void }) => {
     const isActive = (href: string) =>
         href === '/' ? pathname === '/' || pathname === '/admin' : pathname.startsWith(href)
     const base = 'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors [@media(min-height:820px)]:py-3'
@@ -106,7 +107,7 @@ const SidebarContent = ({ pathname, onNavigate, onClose }: { pathname: string; o
                 >
                     <Settings size={20} /> Settings
                 </Link>
-                <button onClick={() => signOut({ callbackUrl: '/' })} className={`w-full ${base} text-green-50/90 hover:bg-white/10`}>
+                <button onClick={onLogout} className={`w-full ${base} text-green-50/90 hover:bg-white/10`}>
                     <LogOut size={20} /> Logout
                 </button>
             </nav>
@@ -128,27 +129,93 @@ const SidebarContent = ({ pathname, onNavigate, onClose }: { pathname: string; o
 
 type Props = {
     children: React.ReactNode
-    /** Number shown on the bell badge */
+    /** Number shown on the bell badge. Leave it out and the shell counts pending orders itself. */
     pendingCount?: number
     /** Pass this to show a working search box in the top bar */
     search?: { value: string; onChange: (v: string) => void; placeholder?: string }
 }
 
-const AdminShell = ({ children, pendingCount = 0, search }: Props) => {
+const AdminShell = ({ children, pendingCount, search }: Props) => {
     const { userData } = useSelector((state: RootState) => state.user)
     const pathname = usePathname() ?? ''
     const [mobileOpen, setMobileOpen] = useState(false)
     const firstName = userData?.name?.split(' ')[0]
+    const email = (userData as unknown as { email?: string } | null | undefined)?.email
+    const [profileOpen, setProfileOpen] = useState(false)
+    const profileRef = useRef<HTMLDivElement>(null)
+    const [fetchedPending, setFetchedPending] = useState(0)
+    const [confirmLogout, setConfirmLogout] = useState(false)
+    const [loggingOut, setLoggingOut] = useState(false)
 
     useEffect(() => {
         setMobileOpen(false)
+        setProfileOpen(false)
     }, [pathname])
+
+    // close the profile menu when clicking outside or pressing Escape
+    useEffect(() => {
+        if (!profileOpen) return
+        const onDown = (e: MouseEvent) => {
+            if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
+        }
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setProfileOpen(false) }
+        document.addEventListener('mousedown', onDown)
+        document.addEventListener('keydown', onKey)
+        return () => {
+            document.removeEventListener('mousedown', onDown)
+            document.removeEventListener('keydown', onKey)
+        }
+    }, [profileOpen])
+
+    // pages that don't pass a pending count: count the pending orders here
+    useEffect(() => {
+        if (pendingCount !== undefined) return
+        let cancelled = false
+        axios.get('/api/admin/get-orders')
+            .then((res) => {
+                if (cancelled) return
+                const list: { paymentMethod: string; isPaid: boolean; status: string }[] = Array.isArray(res.data) ? res.data : []
+                setFetchedPending(
+                    list.filter((o) => (o.paymentMethod === 'cod' || o.isPaid) && o.status === 'pending').length
+                )
+            })
+            .catch((error) => console.log('Failed to load the pending order count', error))
+        return () => { cancelled = true }
+    }, [pendingCount])
+
+    const bellCount = pendingCount ?? fetchedPending
+
+    // close the logout question with the Escape key
+    useEffect(() => {
+        if (!confirmLogout) return
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !loggingOut) setConfirmLogout(false) }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [confirmLogout, loggingOut])
+
+    const doLogout = async () => {
+        setLoggingOut(true)
+        try {
+            await signOut({ callbackUrl: '/' })
+        } finally {
+            setLoggingOut(false)
+        }
+    }
+
+    const renderAvatar = (px: number) =>
+        userData?.image ? (
+            <Image src={userData.image} alt={userData?.name || 'Admin'} width={px} height={px} style={{ width: px, height: px }} className='rounded-full object-cover shrink-0' />
+        ) : (
+            <span style={{ width: px, height: px }} className='rounded-full bg-green-600 text-white font-semibold flex items-center justify-center shrink-0'>
+                {firstName?.[0]?.toUpperCase() || 'A'}
+            </span>
+        )
 
     return (
         <div className='min-h-screen bg-[#f6f8f6] text-gray-800'>
             {/* desktop sidebar */}
             <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 w-60 2xl:w-72 flex-col overflow-y-auto ${sidebarBg}`}>
-                <SidebarContent pathname={pathname} />
+                <SidebarContent pathname={pathname} onLogout={() => setConfirmLogout(true)} />
             </aside>
 
             {/* mobile drawer */}
@@ -171,9 +238,66 @@ const AdminShell = ({ children, pendingCount = 0, search }: Props) => {
                             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
                             className={`fixed inset-y-0 left-0 z-70 w-72 max-w-[85%] flex flex-col overflow-y-auto lg:hidden ${sidebarBg}`}
                         >
-                            <SidebarContent pathname={pathname} onNavigate={() => setMobileOpen(false)} onClose={() => setMobileOpen(false)} />
+                            <SidebarContent
+                                pathname={pathname}
+                                onNavigate={() => setMobileOpen(false)}
+                                onClose={() => setMobileOpen(false)}
+                                onLogout={() => { setMobileOpen(false); setConfirmLogout(true) }}
+                            />
                         </motion.aside>
                     </>
+                )}
+            </AnimatePresence>
+
+            {/* logout confirmation */}
+            <AnimatePresence>
+                {confirmLogout && (
+                    <motion.div
+                        key='logout-confirm'
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className='fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-4'
+                        onClick={() => { if (!loggingOut) setConfirmLogout(false) }}
+                    >
+                        <motion.div
+                            role='alertdialog'
+                            aria-modal='true'
+                            aria-labelledby='logout-title'
+                            aria-describedby='logout-desc'
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            transition={{ duration: 0.2 }}
+                            className='bg-white w-full max-w-sm rounded-2xl p-6 text-center shadow-xl'
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className='w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4'>
+                                <LogOut size={22} className='text-red-600' />
+                            </div>
+                            <p id='logout-title' className='text-lg font-semibold text-gray-800'>Log out?</p>
+                            <p id='logout-desc' className='text-sm text-gray-500 mt-1'>Are you sure you want to log out of your admin account?</p>
+                            <div className='flex gap-3 mt-6'>
+                                <button
+                                    type='button'
+                                    autoFocus
+                                    onClick={() => setConfirmLogout(false)}
+                                    disabled={loggingOut}
+                                    className='flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50'
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={doLogout}
+                                    disabled={loggingOut}
+                                    className='flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60'
+                                >
+                                    {loggingOut ? 'Logging out...' : 'Yes, log out'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -205,25 +329,64 @@ const AdminShell = ({ children, pendingCount = 0, search }: Props) => {
                         <div className='flex items-center gap-4 sm:gap-6 shrink-0'>
                             <Link href='/admin/manage-orders' className='relative w-11 h-11 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100' aria-label='Pending orders'>
                                 <Bell size={20} className='text-gray-600' />
-                                {pendingCount > 0 && (
+                                {bellCount > 0 && (
                                     <span className='absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold flex items-center justify-center'>
-                                        {pendingCount}
+                                        {bellCount}
                                     </span>
                                 )}
                             </Link>
-                            <div className='flex items-center gap-3'>
-                                {userData?.image ? (
-                                    <Image src={userData.image} alt={userData?.name || 'Admin'} width={44} height={44} className='w-11 h-11 rounded-full object-cover' />
-                                ) : (
-                                    <span className='w-11 h-11 rounded-full bg-green-600 text-white font-semibold flex items-center justify-center'>
-                                        {firstName?.[0]?.toUpperCase() || 'A'}
-                                    </span>
-                                )}
-                                <div className='hidden sm:block leading-4'>
-                                    <p className='text-sm font-semibold'>{userData?.name || 'Admin'}</p>
-                                    <p className='text-xs text-gray-500 mt-0.5'>Admin</p>
-                                </div>
-                                <ChevronDown size={18} className='hidden sm:block text-gray-500' />
+                            <div className='relative' ref={profileRef}>
+                                <button
+                                    type='button'
+                                    onClick={() => setProfileOpen((o) => !o)}
+                                    aria-haspopup='menu'
+                                    aria-expanded={profileOpen}
+                                    className='flex items-center gap-3 rounded-xl p-1 -m-1 hover:bg-gray-50 transition-colors'
+                                >
+                                    {renderAvatar(44)}
+                                    <div className='hidden sm:block leading-4 text-left'>
+                                        <p className='text-sm font-semibold'>{userData?.name || 'Admin'}</p>
+                                        <p className='text-xs text-gray-500 mt-0.5'>Admin</p>
+                                    </div>
+                                    <ChevronDown size={18} className={`hidden sm:block text-gray-500 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {profileOpen && (
+                                        <motion.div
+                                            role='menu'
+                                            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                                            transition={{ duration: 0.15 }}
+                                            className='absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl border border-gray-100 shadow-lg p-2 z-50'
+                                        >
+                                            <div className='flex items-center gap-3 px-3 py-3 border-b border-gray-100 mb-1'>
+                                                {renderAvatar(40)}
+                                                <div className='min-w-0'>
+                                                    <p className='text-sm font-semibold text-gray-800 truncate'>{userData?.name || 'Admin'}</p>
+                                                    <p className='text-xs text-gray-500 truncate'>{email || 'Admin'}</p>
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href='/admin/settings'
+                                                role='menuitem'
+                                                onClick={() => setProfileOpen(false)}
+                                                className='flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 transition-colors'
+                                            >
+                                                <User size={16} className='text-green-600' /> Profile Settings
+                                            </Link>
+                                            <button
+                                                type='button'
+                                                role='menuitem'
+                                                onClick={() => { setProfileOpen(false); setConfirmLogout(true) }}
+                                                className='w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors'
+                                            >
+                                                <LogOut size={16} /> Logout
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
                     </div>
