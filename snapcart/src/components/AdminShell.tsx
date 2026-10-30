@@ -26,13 +26,11 @@ const mainNav = [
 const storeNav = [
     { href: '/admin/view-grocery', label: 'Products', icon: Package },
     { href: '/admin/categories', label: 'Categories', icon: Grid2x2 },
-    { href: '#', label: 'Suppliers', icon: Truck },
+    { href: '/admin/delivery', label: 'Suppliers', icon: Truck },
     { href: '#', label: 'Customers', icon: Users },
 ]
 
 const sidebarBg = 'bg-linear-to-b from-[#0b5c3b] to-[#08432c] text-white'
-
-/** Simple vegetable basket illustration for the sidebar footer */
 const Basket = () => (
     <svg viewBox='0 0 92 100' aria-hidden className='h-full max-h-28 w-auto shrink-0'>
         <path d='M24 40 C18 20 30 8 40 6 C40 20 36 30 30 42Z' fill='#2f9e44' />

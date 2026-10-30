@@ -42,7 +42,7 @@ const Nav = ({ user }: { user: IUser }) => {
 
   // These admin pages use AdminShell (own sidebar + top bar), so hide this navbar there.
   // Add a page's path to this list once it is moved to AdminShell. Keep this below every hook.
-  const pagesWithShell = ['/', '/admin', '/admin/add-grocery', '/admin/view-grocery', '/admin/manage-orders', '/admin/settings', '/admin/categories']
+  const pagesWithShell = ['/', '/admin', '/admin/add-grocery', '/admin/view-grocery', '/admin/manage-orders', '/admin/settings', '/admin/categories','/admin/delivery']
   const hideNav = user.role === 'admin' && pagesWithShell.includes(pathname ?? '')
   if (hideNav) return null
 

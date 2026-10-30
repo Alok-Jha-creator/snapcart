@@ -18,7 +18,6 @@ interface IGrocery {
   image: string
 }
 
-// Same list used on the Add Grocery and View Grocery pages
 const categoryList = [
   "Fruits & Vegetables",
   "Dairy & Eggs",
