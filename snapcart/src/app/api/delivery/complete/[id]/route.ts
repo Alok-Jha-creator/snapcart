@@ -1,35 +1,47 @@
-// app/api/delivery/complete/[id]/route.ts
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
-import connectDb from "@/lib/db"
-import DeliveryAssignment from "@/models/deliveryAssignment.model"
+import { NextResponse } from "next/server"
+import { deliveryRoute } from "@/lib/deliveryRoute"
+import { DELIVERY_FEE } from "@/lib/deliveryConfig"
+import Delivery from "@/models/delivery.model"
 import Order from "@/models/order.model"
 
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const session = await auth()
-    const userId = session?.user?.id
-    if (!userId) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+// The order reached the customer. For cash on delivery the delivery boy must confirm the cash.
+export const POST = deliveryRoute(async ({ req, id, boy }) => {
+    const body = await req.json().catch(() => ({}))
 
-    const { id } = await params
-    await connectDb()
-
-    const assignment = await DeliveryAssignment.findOneAndUpdate(
-      { _id: id, assignedTo: userId, status: "assigned" },
-      { status: "completed" },
-      { new: true }
+    const current = await Delivery.findOne({ _id: id, deliveryBoy: boy._id, status: "out for delivery" }).populate(
+        "order",
+        "paymentMethod isPaid totalAmount"
     )
-    if (!assignment) return NextResponse.json({ message: "Assignment not found" }, { status: 404 })
-
-    const order = await Order.findById(assignment.order)
-    if (order) {
-      order.status = "delivered"
-      if (order.paymentMethod === "cod") order.isPaid = true   // COD ko paisa delivery ma line
-      await order.save()
+    if (!current || !current.order) {
+        return NextResponse.json({ message: "This order is not out for delivery." }, { status: 409 })
     }
 
-    return NextResponse.json({ message: "Marked as delivered" })
-  } catch (error) {
-    return NextResponse.json({ message: `Complete failed: ${error}` }, { status: 500 })
-  }
-}
+    const order = current.order
+    const isCod = order.paymentMethod === "cod"
+    const mustCollect = isCod && !order.isPaid
+    if (mustCollect && body?.cashCollected !== true) {
+        return NextResponse.json({ message: `Please confirm that you collected Rs ${order.totalAmount} in cash.` }, { status: 400 })
+    }
+
+    const delivery = await Delivery.findOneAndUpdate(
+        { _id: id, deliveryBoy: boy._id, status: "out for delivery" },
+        {
+            $set: {
+                status: "delivered",
+                deliveredAt: new Date(),
+                fee: DELIVERY_FEE,
+                cashCollected: mustCollect ? order.totalAmount : 0,
+            },
+        },
+        { new: true }
+    )
+    if (!delivery) {
+        return NextResponse.json({ message: "This order was already updated." }, { status: 409 })
+    }
+
+    await Order.updateOne(
+        { _id: order._id },
+        { $set: isCod ? { status: "delivered", isPaid: true } : { status: "delivered" } }
+    )
+    return NextResponse.json({ ok: true })
+})

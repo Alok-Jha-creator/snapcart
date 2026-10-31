@@ -26,10 +26,12 @@ interface IOrder {
   address: { fullName: string; mobile?: string; fullAddress?: string; city?: string; state?: string; pincode?: string }
   createdAt: string
 }
-interface IBoy { _id: string; name: string; phone: string; image?: string; isActive: boolean }
+interface IBoy { _id: string; name: string; phone: string; image?: string; isActive: boolean; email?: string; user?: string | null }
 interface IDelivery { _id: string; order: string; deliveryBoy: string; status: DStatus; assignedAt: string }
 
-interface Row { order: IOrder; rec?: IDelivery; boy?: IBoy; st: DStatus }
+interface IRejection { order: string; boyName: string; reason?: string; createdAt: string }
+
+interface Row { order: IOrder; rec?: IDelivery; boy?: IBoy; st: DStatus; rejection?: IRejection }
 interface BoyStat { active: number; onDelivery: number; completed: number; failed: number; total: number; status: BoyStatus }
 
 /* --------------------------------- helpers -------------------------------- */
@@ -138,6 +140,9 @@ const BoyModal = ({
   const [name, setName] = useState(boy?.name ?? '')
   const [phone, setPhone] = useState(boy?.phone ?? '')
   const [isActive, setIsActive] = useState(boy?.isActive ?? true)
+  const [email, setEmail] = useState(boy?.email ?? '')
+  const [password, setPassword] = useState('')
+  const hasLogin = !!boy?.user
   const [photo, setPhoto] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -159,6 +164,12 @@ const BoyModal = ({
     setError('')
     if (!name.trim()) return setError('Please enter a name.')
     if (!/^[0-9+\-\s]{7,15}$/.test(phone.trim())) return setError('Please enter a valid phone number.')
+    // a new delivery boy always needs a login; an older one only if the admin starts filling it in
+    const wantsLogin = !boy || hasLogin || email.trim() !== '' || password !== ''
+    if (wantsLogin) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError('Please enter a valid email address.')
+      if ((!hasLogin || password !== '') && password.length < 8) return setError('Password must be at least 8 characters.')
+    }
     if (boy && !isActive && boy.isActive && activeOrders > 0) {
       return setError(`${boy.name} still has ${activeOrders} active ${activeOrders === 1 ? 'order' : 'orders'}. Assign them to someone else before deactivating.`)
     }
@@ -168,6 +179,10 @@ const BoyModal = ({
       fd.append('name', name.trim())
       fd.append('phone', phone.trim())
       if (boy) fd.append('isActive', String(isActive))
+      if (wantsLogin) {
+        fd.append('email', email.trim())
+        if (password) fd.append('password', password)
+      }
       if (photo) fd.append('image', photo)
       await onSave(fd)
     } catch (err) {
@@ -183,7 +198,7 @@ const BoyModal = ({
       <div className='flex items-start justify-between gap-3 mb-5'>
         <div>
           <h3 className='text-lg font-bold text-[#0b5c3b]'>{boy ? 'Edit Delivery Boy' : 'Add Delivery Boy'}</h3>
-          <p className='text-xs text-gray-500 mt-0.5'>Delivery boys don&apos;t need a login. You assign their orders yourself.</p>
+          <p className='text-xs text-gray-500 mt-0.5'>The delivery boy signs in with the email and password below. You assign their orders yourself.</p>
         </div>
         <button onClick={onClose} disabled={saving} aria-label='Close' className='text-gray-400 hover:text-gray-600'><X size={20} /></button>
       </div>
@@ -209,6 +224,34 @@ const BoyModal = ({
         <div>
           <label htmlFor='boy-phone' className='block text-sm font-medium text-gray-700 mb-1.5'>Phone number</label>
           <input id='boy-phone' inputMode='tel' value={phone} onChange={(e) => setPhone(e.target.value)} placeholder='e.g. 9801234567' className={inputClass} />
+        </div>
+
+        <div className='rounded-xl border border-gray-200 p-4 space-y-3'>
+          <div>
+            <p className='text-sm font-semibold text-gray-800'>Login details</p>
+            <p className='text-xs text-gray-500 mt-0.5'>
+              {boy && !hasLogin
+                ? 'This delivery boy has no login yet. Add an email and password so they can sign in.'
+                : 'Share these with the delivery boy so they can sign in and see their orders.'}
+            </p>
+          </div>
+          <div>
+            <label htmlFor='boy-email' className='block text-sm font-medium text-gray-700 mb-1.5'>Email</label>
+            <input id='boy-email' type='email' autoComplete='off' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='e.g. ram@example.com' className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor='boy-password' className='block text-sm font-medium text-gray-700 mb-1.5'>{hasLogin ? 'New password' : 'Password'}</label>
+            <div className='flex gap-2'>
+              <input id='boy-password' type='text' autoComplete='off' value={password} onChange={(e) => setPassword(e.target.value)} placeholder={hasLogin ? 'Leave blank to keep the current one' : 'At least 8 characters'} className={inputClass} />
+              <button
+                type='button'
+                onClick={() => setPassword(Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join(''))}
+                className='shrink-0 text-xs font-semibold border border-gray-200 text-gray-700 px-3 rounded-xl hover:bg-gray-50'
+              >
+                Generate
+              </button>
+            </div>
+          </div>
         </div>
 
         {boy && (
@@ -310,6 +353,13 @@ const OrderModal = ({
         </div>
       </div>
 
+      {/* a delivery boy said no to this order */}
+      {!rec && row.rejection && (
+        <p className='mt-4 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5'>
+          Rejected by {row.rejection.boyName}{row.rejection.reason ? `: ${row.rejection.reason}` : '.'} Please assign another delivery boy.
+        </p>
+      )}
+
       {/* current delivery boy */}
       {boy && (
         <div className='mt-4 flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3'>
@@ -342,7 +392,7 @@ const OrderModal = ({
                     <Avatar boy={b} size={36} />
                     <span className='min-w-0 flex-1'>
                       <span className='block text-sm font-medium text-gray-800 truncate'>{b.name}</span>
-                      <span className='block text-xs text-gray-500'>{b.phone} · {bs?.active ?? 0} active</span>
+                      <span className='block text-xs text-gray-500'>{b.phone} · {bs?.active ?? 0} active{b.user ? '' : ' · no login'}</span>
                     </span>
                     <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full shrink-0 ${meta.badge}`}>{meta.label}</span>
                   </label>
@@ -393,6 +443,7 @@ const DeliveryManagement = () => {
   const [orders, setOrders] = useState<IOrder[]>([])
   const [boys, setBoys] = useState<IBoy[]>([])
   const [deliveries, setDeliveries] = useState<IDelivery[]>([])
+  const [rejections, setRejections] = useState<IRejection[]>([])
   const [loading, setLoading] = useState(true)
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
@@ -409,15 +460,17 @@ const DeliveryManagement = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [o, b, d] = await Promise.allSettled([
+      const [o, b, d, r] = await Promise.allSettled([
         axios.get('/api/admin/get-orders'),
         axios.get('/api/admin/delivery-boys'),
         axios.get('/api/admin/deliveries'),
+        axios.get('/api/admin/delivery-rejections'),
       ])
       let failed = false
       if (o.status === 'fulfilled') setOrders(o.value.data); else failed = true
       if (b.status === 'fulfilled') setBoys(b.value.data); else failed = true
       if (d.status === 'fulfilled') setDeliveries(d.value.data); else failed = true
+      if (r.status === 'fulfilled') setRejections(r.value.data) // only a hint, so a failure here is not an error
       if (failed) setNotice({ type: 'error', text: 'Some data could not be loaded. Please refresh the page.' })
       setLoading(false)
     }
@@ -446,11 +499,20 @@ const DeliveryManagement = () => {
   const rows: Row[] = useMemo(() => {
     const recByOrder = new Map(deliveries.map((d) => [String(d.order), d]))
     const boyById = new Map(boys.map((b) => [b._id, b]))
+    // newest rejection per order (the list comes newest first)
+    const rejectionByOrder = new Map<string, IRejection>()
+    rejections.forEach((x) => { if (!rejectionByOrder.has(String(x.order))) rejectionByOrder.set(String(x.order), x) })
     return validOrders.map((order) => {
       const rec = recByOrder.get(order._id)
-      return { order, rec, boy: rec ? boyById.get(String(rec.deliveryBoy)) : undefined, st: effectiveStatus(order, rec) }
+      return {
+        order,
+        rec,
+        boy: rec ? boyById.get(String(rec.deliveryBoy)) : undefined,
+        st: effectiveStatus(order, rec),
+        rejection: rec ? undefined : rejectionByOrder.get(order._id),
+      }
     })
-  }, [validOrders, deliveries, boys])
+  }, [validOrders, deliveries, boys, rejections])
 
   const stats: Record<string, BoyStat> = useMemo(() => {
     const result: Record<string, BoyStat> = {}
@@ -682,7 +744,10 @@ const DeliveryManagement = () => {
                             <span className='font-semibold text-gray-800'>{b.name}</span>
                           </div>
                         </td>
-                        <td className='px-3 py-3 text-gray-600'>{b.phone}</td>
+                        <td className='px-3 py-3 text-gray-600'>
+                          <p>{b.phone}</p>
+                          <p className='text-xs text-gray-400'>{b.user ? b.email : 'No login yet'}</p>
+                        </td>
                         <td className='px-3 py-3'><span className={`text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${meta.badge}`}>{meta.label}</span></td>
                         <td className='px-3 py-3 text-gray-700'>{s?.active ?? 0}</td>
                         <td className='px-3 py-3 text-gray-700'>{s?.completed ?? 0}</td>
@@ -764,6 +829,8 @@ const DeliveryManagement = () => {
                         <td className='px-3 py-3'>
                           {r.boy ? (
                             <span className='flex items-center gap-2'><Avatar boy={r.boy} size={28} /><span className='text-gray-800'>{r.boy.name}</span></span>
+                          ) : r.rejection ? (
+                            <span className='text-xs font-medium text-red-600' title={r.rejection.reason || undefined}>Rejected by {r.rejection.boyName}</span>
                           ) : <span className='text-gray-400'>Not Assigned</span>}
                         </td>
                         <td className='px-3 py-3'>

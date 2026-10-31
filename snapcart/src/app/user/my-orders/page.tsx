@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft, Package, User, Phone, MapPin, CreditCard, Truck, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Package, User, Phone, MapPin, CreditCard, Truck, ChevronDown, Navigation } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { RootState } from '@/redux/store'
 import { useSelector } from 'react-redux'
@@ -197,6 +197,15 @@ const MyOrders = () => {
                                         </span>
                                         <span className='font-semibold text-gray-800'>Total: Rs {order.totalAmount}</span>
                                     </div>
+
+                                    {/* live tracking page: delivery partner, status steps and map */}
+                                    <button
+                                        onClick={() => router.push(`/user/track/${order._id}`)}
+                                        className='mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-green-700 hover:bg-green-800 text-white text-sm font-semibold py-2.5 transition-colors'
+                                    >
+                                        <Navigation size={16} />
+                                        {order.status === "delivered" ? "View delivery details" : order.status === "out of delivery" ? "Track live on map" : "Track order"}
+                                    </button>
                                 </motion.div>
                             )
                         })}

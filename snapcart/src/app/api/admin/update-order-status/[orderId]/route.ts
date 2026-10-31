@@ -1,74 +1,34 @@
 import connectDb from "@/lib/db";
-import DeliveryAssignment from "@/models/deliveryAssignment.model";
+import requireAdmin from "@/lib/requireAdmin";
 import Order from "@/models/order.model";
-import User from "@/models/user.model";
 import { NextRequest, NextResponse } from "next/server";
 
+const STATUSES = ["pending", "out of delivery", "delivered"]
+
+// CHANGED: the old version broadcast the order to every nearby delivery boy. The admin now assigns
+// orders herself (Delivery Management), so this only updates the order status.
+// It also checks that the caller is the admin, which the old version did not.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
     try {
         await connectDb()
+        if (!(await requireAdmin())) return NextResponse.json({ message: "Not allowed" }, { status: 403 })
+
         const { orderId } = await params
         const { status } = await req.json()
-        const order = await Order.findById(orderId).populate("user")
+        if (!STATUSES.includes(status)) {
+            return NextResponse.json({ message: "Invalid status" }, { status: 400 })
+        }
+
+        const order = await Order.findById(orderId)
         if (!order) {
-            return NextResponse.json(
-                { message: "order not found" },
-                { status: 400 }
-            )
+            return NextResponse.json({ message: "order not found" }, { status: 404 })
         }
         order.status = status
-        let deliveryBoysPayload: any = []
-        if (status === "out of delivery" && !order.assignement) {
-            const { latitude, longitude } = order.address
-            const nearByDeliveryBoys = await User.find({
-                role: "deliveryBoy",
-                location: {
-                    $near: {
-                        $geometry: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
-                        $maxDistance: 20000
-                    }
-                }
-            })
-            const nearByIds = nearByDeliveryBoys.map((b) => b._id)
-            const busyIds = await DeliveryAssignment.find({
-                assignedTo: { $in: nearByIds },
-                status: { $nin: ["broadcasted", "completed"] }
-            }).distinct("assignedTo")
-            const busyIdSet = new Set(busyIds.map((b) => String(b)))
-            const availableDeliveryBoys = nearByDeliveryBoys.filter(
-                (b) => !busyIdSet.has(String(b._id))
-            )
-            const candidates = availableDeliveryBoys.map((b) => b._id)
-            if (candidates.length == 0) {
-                await order.save()
-                return NextResponse.json(
-                    { message: "There are no available delivery boys" },
-                    { status: 200 }
-                )
-            }
-            const assignment = await DeliveryAssignment.create({
-                order: order._id,
-                broadcastedTo: candidates,
-                status: "broadcasted"
-            })
-            order.assignement  = assignment._id
-            deliveryBoysPayload = availableDeliveryBoys.map((b) => ({
-                id: b._id,
-                name: b.name,
-                mobile: b.mobile,
-                latitude: b.location.coordinates[1],
-                longitude: b.location.coordinates[0]
-            }))
-        }
         await order.save()
-        return NextResponse.json({
-            assignment: order.assignement,
-            availableBoys: deliveryBoysPayload
-        }, { status: 200 })
+
+        // same response shape as before, so Manage Orders keeps working
+        return NextResponse.json({ assignment: order.assignement ?? null, availableBoys: [] }, { status: 200 })
     } catch (error) {
-        return NextResponse.json(
-            { message: `update status error ${error}` },
-            { status: 500 }
-        )
+        return NextResponse.json({ message: `update status error ${error}` }, { status: 500 })
     }
 }

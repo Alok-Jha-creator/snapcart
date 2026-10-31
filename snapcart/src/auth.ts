@@ -2,9 +2,10 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import connectDb from "./lib/db";
 import User from "./models/user.model";
+import DeliveryBoy from "./models/deliveryBoy.model";
 import bcrypt from "bcryptjs";
 import Google from "next-auth/providers/google";
- 
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -16,14 +17,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           await connectDb();
 
-          const email = credentials?.email as string;
+          const email = (credentials?.email as string)?.trim();
           const password = credentials?.password as string;
 
           if (!email || !password) {
             throw new Error("Missing email or password");
           }
 
-          const user = await User.findOne({ email });
+          // CHANGED: the email match ignores upper/lower case (admin-created logins are saved in lower case)
+          const user = await User.findOne({ email }).collation({ locale: "en", strength: 2 });
           if (!user) {
             throw new Error("User not found");
           }
@@ -31,6 +33,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const isMatch = await bcrypt.compare(password, user.password);
           if (!isMatch) {
             throw new Error("Invalid password");
+          }
+
+          // NEW: a delivery boy that the admin has deactivated cannot log in
+          if (user.role === "deliveryBoy") {
+            const boy = await DeliveryBoy.findOne({ user: user._id });
+            if (boy && !boy.isActive) {
+              throw new Error("Delivery account is deactivated");
+            }
           }
 
           return {
@@ -63,8 +73,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
         }
         user.id = dbUser._id.toString();
-        user.role = dbUser.role;      
-      }  
+        user.role = dbUser.role;
+      }
       return true;
     },
     // tocken bhitra user ko data rakhxa callbacks le
@@ -88,7 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             session.user.name = token.name as string;
             session.user.email = token.email as string;
             session.user.role = token.role as string;
-           
+
         }
         return session;
     }

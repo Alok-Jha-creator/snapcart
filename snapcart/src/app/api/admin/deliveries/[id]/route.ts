@@ -3,6 +3,7 @@ import mongoose from "mongoose"
 import connectDb from "@/lib/db"
 import requireAdmin from "@/lib/requireAdmin"
 import Delivery, { DeliveryStatus } from "@/models/delivery.model"
+import { DELIVERY_FEE } from "@/lib/deliveryConfig"
 
 // Which status can follow which
 const NEXT: Record<DeliveryStatus, DeliveryStatus[]> = {
@@ -28,7 +29,21 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
             return NextResponse.json({ message: `Cannot move a "${delivery.status}" delivery to "${status}"` }, { status: 400 })
         }
 
+        // CHANGED: also keep the times and earnings the delivery boy's dashboard shows
+        const now = new Date()
         delivery.status = status
+        if (status === "out for delivery") {
+            delivery.pickedUpAt = now
+            if (!delivery.acceptedAt) delivery.acceptedAt = now
+        }
+        if (status === "delivered") {
+            delivery.deliveredAt = now
+            delivery.fee = DELIVERY_FEE
+        }
+        if (status === "failed") {
+            delivery.failedAt = now
+            if (!delivery.failReason) delivery.failReason = "Marked as failed by the admin"
+        }
         await delivery.save()
         return NextResponse.json(delivery)
     } catch (error) {

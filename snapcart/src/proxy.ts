@@ -25,14 +25,21 @@ export default async function proxy(req: NextRequest) {
   }
 
   const role = token.role
+
+  // NEW: a delivery boy who opens the home page goes straight to their dashboard
+  if (pathname === "/" && role === "deliveryBoy") {
+    return NextResponse.redirect(new URL("/delivery", req.url))
+  }
+
+  // CHANGED: the folder is "unauthorized" (the old redirect was spelled "unathorized" and gave a 404)
   if (pathname.startsWith("/user") && role !== "user") {
-    return NextResponse.redirect(new URL("/unathorized", req.url))
+    return NextResponse.redirect(new URL("/unauthorized", req.url))
   }
   if (pathname.startsWith("/delivery") && role !== "deliveryBoy") {
-    return NextResponse.redirect(new URL("/unathorized", req.url))
+    return NextResponse.redirect(new URL("/unauthorized", req.url))
   }
   if (pathname.startsWith("/admin") && role !== "admin") {
-    return NextResponse.redirect(new URL("/unathorized", req.url))
+    return NextResponse.redirect(new URL("/unauthorized", req.url))
   }
 
   return NextResponse.next()

@@ -36,9 +36,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "This order is already out for delivery or delivered" }, { status: 409 })
         }
 
+        // CHANGED: a new assignment starts fresh, so the new delivery boy sees it as a "New request"
         const delivery = await Delivery.findOneAndUpdate(
             { order: orderId },
-            { $set: { deliveryBoy: deliveryBoyId, status: "pending", assignedAt: new Date() } },
+            {
+                $set: {
+                    deliveryBoy: deliveryBoyId,
+                    status: "pending",
+                    assignedAt: new Date(),
+                    acceptedAt: null,
+                    pickedUpAt: null,
+                    failedAt: null,
+                    failReason: "",
+                },
+            },
             { upsert: true, new: true, setDefaultsOnInsert: true }
         )
         return NextResponse.json(delivery)
