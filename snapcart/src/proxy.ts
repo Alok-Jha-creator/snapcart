@@ -17,15 +17,12 @@ export default async function proxy(req: NextRequest) {
         ? "__Secure-authjs.session-token"
         : "authjs.session-token",
   })
-
   if (!token) {
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("callbackUrl", req.url)
     return NextResponse.redirect(loginUrl)
   }
-
   const role = token.role
-
   // NEW: a delivery boy who opens the home page goes straight to their dashboard
   if (pathname === "/" && role === "deliveryBoy") {
     return NextResponse.redirect(new URL("/delivery", req.url))
