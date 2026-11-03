@@ -24,7 +24,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new Error("Missing email or password");
           }
 
-          // CHANGED: the email match ignores upper/lower case (admin-created logins are saved in lower case)
           const user = await User.findOne({ email }).collation({ locale: "en", strength: 2 });
           if (!user) {
             throw new Error("User not found");
@@ -35,7 +34,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new Error("Invalid password");
           }
 
-          // NEW: a delivery boy that the admin has deactivated cannot log in
           if (user.role === "deliveryBoy") {
             const boy = await DeliveryBoy.findOne({ user: user._id });
             if (boy && !boy.isActive) {
@@ -77,7 +75,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true;
     },
-    // tocken bhitra user ko data rakhxa callbacks le
+    
     jwt({token,user,trigger,session}) {
         if(user) {
             token.id = user.id,
