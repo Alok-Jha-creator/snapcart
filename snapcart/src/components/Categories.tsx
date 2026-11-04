@@ -17,7 +17,6 @@ interface IGrocery {
   unit: string
   image: string
 }
-
 const categoryList = [
   "Fruits & Vegetables",
   "Dairy & Eggs",
@@ -30,7 +29,6 @@ const categoryList = [
   "Instant & Packaged Food",
   "Baby & Pet Care"
 ]
-
 const categoryMeta: Record<string, { icon: React.ElementType; tone: string; bar: string }> = {
   "Fruits & Vegetables": { icon: Apple, tone: 'bg-green-100 text-green-700', bar: 'bg-green-500' },
   "Dairy & Eggs": { icon: Milk, tone: 'bg-blue-100 text-blue-600', bar: 'bg-blue-500' },
@@ -44,9 +42,7 @@ const categoryMeta: Record<string, { icon: React.ElementType; tone: string; bar:
   "Baby & Pet Care": { icon: Baby, tone: 'bg-teal-100 text-teal-600', bar: 'bg-teal-500' },
 }
 const fallbackMeta = { icon: Package, tone: 'bg-gray-100 text-gray-600', bar: 'bg-gray-400' }
-
 type SortKey = 'most' | 'name'
-
 const inputClass =
   'border border-gray-200 bg-white rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all'
 
@@ -73,7 +69,6 @@ const Categories = () => {
   }, [])
 
   const rows = useMemo(() => {
-    // the fixed list, plus any category found on a product that is not in the list
     const names = [...categoryList]
     groceries.forEach((g) => { if (g.category && !names.includes(g.category)) names.push(g.category) })
 
@@ -108,7 +103,6 @@ const Categories = () => {
 
   return (
     <AdminShell search={{ value: search, onChange: setSearch, placeholder: 'Search categories...' }}>
-      {/* page header */}
       <div className='flex flex-wrap items-start justify-between gap-3 mb-6'>
         <div className='flex items-center gap-3'>
           <Grid2x2 size={42} className='text-[#0b5c3b] shrink-0' strokeWidth={1.6} />
@@ -133,7 +127,6 @@ const Categories = () => {
         </div>
       )}
 
-      {/* summary */}
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6'>
         {stats.map((s) => (
           <div key={s.label} className={`rounded-2xl border bg-linear-to-br ${s.card} shadow-sm p-4 flex items-center gap-3`}>
@@ -150,7 +143,6 @@ const Categories = () => {
         ))}
       </div>
 
-      {/* toolbar */}
       <div className='flex flex-wrap items-center justify-between gap-3 mb-4'>
         <h2 className='text-lg font-semibold text-[#0b5c3b]'>All categories</h2>
         <div className='flex items-center gap-3'>
@@ -167,7 +159,6 @@ const Categories = () => {
         </div>
       </div>
 
-      {/* grid */}
       {loading ? (
         <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4'>
           {[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className='h-52 bg-white border border-gray-100 rounded-2xl animate-pulse' />)}
@@ -197,7 +188,6 @@ const Categories = () => {
                 </div>
               </div>
 
-              {/* share of the whole store */}
               <div className='mt-4'>
                 <div className='h-1.5 rounded-full bg-gray-100 overflow-hidden'>
                   <div className={`h-full rounded-full ${r.meta.bar}`} style={{ width: `${r.share}%` }} />
@@ -205,7 +195,6 @@ const Categories = () => {
                 <p className='text-[11px] text-gray-400 mt-1.5'>{r.share}% of your store</p>
               </div>
 
-              {/* product thumbnails */}
               <div className='mt-4 flex items-center gap-2 min-h-12'>
                 {r.thumbs.length === 0 ? (
                   <p className='text-xs text-gray-400'>No products in this category yet.</p>
