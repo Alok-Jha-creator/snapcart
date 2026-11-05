@@ -12,9 +12,6 @@ import {
     PlusCircle, Search, Settings, ShoppingBag, ShoppingCart, Truck, User, Users, X,
 } from 'lucide-react'
 import { RootState } from '@/redux/store'
-
-/* ------------------------------ static config ----------------------------- */
-
 const mainNav = [
     { href: '/', label: 'Dashboard', icon: Home },
     { href: '/admin/add-grocery', label: 'Add Grocery', icon: PlusCircle },
@@ -22,14 +19,12 @@ const mainNav = [
     { href: '/admin/manage-orders', label: 'Manage Orders', icon: ClipboardList },
 ]
 
-// These pages are in the design but not in the project yet — point them to real routes when they exist
 const storeNav = [
     { href: '/admin/view-grocery', label: 'Products', icon: Package },
     { href: '/admin/categories', label: 'Categories', icon: Grid2x2 },
     { href: '/admin/delivery', label: 'Suppliers', icon: Truck },
     { href: '#', label: 'Customers', icon: Users },
 ]
-
 const sidebarBg = 'bg-linear-to-b from-[#0b5c3b] to-[#08432c] text-white'
 const Basket = () => (
     <svg viewBox='0 0 92 100' aria-hidden className='h-full max-h-28 w-auto shrink-0'>
@@ -48,8 +43,6 @@ const Basket = () => (
         <rect x='6' y='44' width='80' height='9' rx='4.5' fill='#2f9e44' />
     </svg>
 )
-
-/* -------------------------------- sidebar --------------------------------- */
 
 const SidebarContent = ({ pathname, onNavigate, onClose, onLogout }: { pathname: string; onNavigate?: () => void; onClose?: () => void; onLogout: () => void }) => {
     const isActive = (href: string) =>
@@ -123,13 +116,9 @@ const SidebarContent = ({ pathname, onNavigate, onClose, onLogout }: { pathname:
     )
 }
 
-/* ---------------------------------- shell --------------------------------- */
-
 type Props = {
     children: React.ReactNode
-    /** Number shown on the bell badge. Leave it out and the shell counts pending orders itself. */
     pendingCount?: number
-    /** Pass this to show a working search box in the top bar */
     search?: { value: string; onChange: (v: string) => void; placeholder?: string }
 }
 
@@ -150,7 +139,6 @@ const AdminShell = ({ children, pendingCount, search }: Props) => {
         setProfileOpen(false)
     }, [pathname])
 
-    // close the profile menu when clicking outside or pressing Escape
     useEffect(() => {
         if (!profileOpen) return
         const onDown = (e: MouseEvent) => {
@@ -165,7 +153,6 @@ const AdminShell = ({ children, pendingCount, search }: Props) => {
         }
     }, [profileOpen])
 
-    // pages that don't pass a pending count: count the pending orders here
     useEffect(() => {
         if (pendingCount !== undefined) return
         let cancelled = false
@@ -183,7 +170,6 @@ const AdminShell = ({ children, pendingCount, search }: Props) => {
 
     const bellCount = pendingCount ?? fetchedPending
 
-    // close the logout question with the Escape key
     useEffect(() => {
         if (!confirmLogout) return
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !loggingOut) setConfirmLogout(false) }
@@ -211,12 +197,11 @@ const AdminShell = ({ children, pendingCount, search }: Props) => {
 
     return (
         <div className='min-h-screen bg-[#f6f8f6] text-gray-800'>
-            {/* desktop sidebar */}
+            
             <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 w-60 2xl:w-72 flex-col overflow-y-auto ${sidebarBg}`}>
                 <SidebarContent pathname={pathname} onLogout={() => setConfirmLogout(true)} />
             </aside>
 
-            {/* mobile drawer */}
             <AnimatePresence>
                 {mobileOpen && (
                     <>
@@ -247,7 +232,6 @@ const AdminShell = ({ children, pendingCount, search }: Props) => {
                 )}
             </AnimatePresence>
 
-            {/* logout confirmation */}
             <AnimatePresence>
                 {confirmLogout && (
                     <motion.div
@@ -300,7 +284,7 @@ const AdminShell = ({ children, pendingCount, search }: Props) => {
             </AnimatePresence>
 
             <div className='lg:ml-60 2xl:ml-72'>
-                {/* top bar */}
+               
                 <header className='sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100'>
                     <div className='flex items-center justify-between gap-4 px-4 sm:px-8 h-20'>
                         <div className='flex items-center gap-3 flex-1 min-w-0'>
